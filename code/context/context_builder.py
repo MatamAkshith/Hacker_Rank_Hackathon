@@ -184,12 +184,50 @@ class ContextBuilder:
                 )
             )
 
-        # 5. Fetch Daily Notification summary (failsafe)
+        # 5. Fetch Daily Notification summary and pre-aggregate (failsafe)
         notification_summary = None
         try:
             notif_dicts = self.loader.get_notification_summary(user_id)
             if notif_dicts:
-                notification_summary = [NotificationSummary(**n) for n in notif_dicts]
+                sorted_notifs = sorted(notif_dicts, key=lambda x: x.get("date", ""), reverse=True)
+                total_sent = sum(n.get("notifications_sent", 0) for n in sorted_notifs)
+                total_dismissed = sum(n.get("notifications_dismissed", 0) for n in sorted_notifs)
+                num_days = len(sorted_notifs)
+                
+                avg_notifications = total_sent / num_days if num_days > 0 else 0.0
+                avg_dismissals = total_dismissed / num_days if num_days > 0 else 0.0
+                
+                recent_3 = sorted_notifs[:3]
+                sent_last_3d = sum(n.get("notifications_sent", 0) for n in recent_3)
+                dismissed_last_3d = sum(n.get("notifications_dismissed", 0) for n in recent_3)
+                fatigue_score = dismissed_last_3d / sent_last_3d if sent_last_3d > 0 else 0.0
+                fatigue_score = max(0.0, min(1.0, fatigue_score))
+                
+                recent_avg = sent_last_3d / len(recent_3) if recent_3 else 0.0
+                if recent_avg > avg_notifications * 1.2:
+                    recent_trend = "spiking"
+                elif recent_avg < avg_notifications * 0.8:
+                    recent_trend = "declining"
+                else:
+                    recent_trend = "stable"
+                    
+                notification_summary = NotificationSummary(
+                    fatigue_score=fatigue_score,
+                    avg_notifications=avg_notifications,
+                    avg_dismissals=avg_dismissals,
+                    recent_trend=recent_trend,
+                    sent_last_3d=sent_last_3d,
+                    dismissed_last_3d=dismissed_last_3d
+                )
+            else:
+                notification_summary = NotificationSummary(
+                    fatigue_score=0.0,
+                    avg_notifications=0.0,
+                    avg_dismissals=0.0,
+                    recent_trend="unknown",
+                    sent_last_3d=0,
+                    dismissed_last_3d=0
+                )
         except Exception:
             missing_datasets.append("daily_notification_summary.csv")
         

@@ -189,6 +189,7 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Sprint 2 - Features Phase 3):** Completed the deterministic feature extraction suite in `extractor.py` by implementing Promotion Score, Spam Risk, Scam Risk, Sender Trust, and Urgency features. Created `validate_extractor_phase3.py` verifying normal, promotional, and high-risk scam test cases.
 - **2026-08-01 (Sprint 2 - BusinessHistory Refactor):** Defined `BusinessHistory` model in `models.py` and updated `UnifiedContext` field to `Optional[BusinessHistory]` (single object) to match the database's unique mapping. Refactored `ContextBuilder` construction and verified downstream compatibility.
 - **2026-08-01 (Sprint 2 - InteractionHistory Refactor):** Consolidated historical messages, historical events, and computed interaction statistics into a single `InteractionHistory` Pydantic model. Updated `ContextBuilder`, `FeatureExtractor`, and validation scripts to construct and consume this unified history object.
+- **2026-08-01 (Sprint 2 - NotificationSummary Refactor):** Redefined `NotificationSummary` schema to pre-aggregate fatigue score, daily averages, recent trend trajectory, and recent volumes. Refactored `ContextBuilder` daily calculations, simplified `FeatureExtractor` fatigue query logic, and verified test scenarios.
 
 ---
 

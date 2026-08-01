@@ -49,7 +49,7 @@ def run_tests():
     print(f"  Business History: {ctx.business_history}")
     print(f"  Message History (count): {len(ctx.interaction_history.historical_messages) if ctx.interaction_history else 0}")
     print(f"  Message Events (count): {len(ctx.interaction_history.historical_events) if ctx.interaction_history else 0}")
-    print(f"  Notification Summary (count): {len(ctx.notification_summary) if ctx.notification_summary else 0}")
+    print(f"  Notification Summary: {ctx.notification_summary}")
     print(f"  Media Metadata: {ctx.media_metadata}")
 
     print("\n=== Step 6: Build Context for different Conversation Types ===")

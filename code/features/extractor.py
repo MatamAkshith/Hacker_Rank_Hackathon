@@ -162,26 +162,11 @@ class FeatureExtractor:
         if not summary:
             return NotificationFatigueFeature(score=0.0, sent_last_3d=0, dismissed_last_3d=0)
             
-        try:
-            sorted_summary = sorted(summary, key=lambda x: x.date, reverse=True)
-            recent_3 = sorted_summary[:3]
-            
-            sent_last_3d = sum(n.notifications_sent for n in recent_3)
-            dismissed_last_3d = sum(n.notifications_dismissed for n in recent_3)
-            
-            if sent_last_3d == 0:
-                score = 0.0
-            else:
-                score = dismissed_last_3d / sent_last_3d
-                
-            score = max(0.0, min(1.0, score))
-            return NotificationFatigueFeature(
-                score=score,
-                sent_last_3d=sent_last_3d,
-                dismissed_last_3d=dismissed_last_3d
-            )
-        except Exception:
-            return NotificationFatigueFeature(score=0.0, sent_last_3d=0, dismissed_last_3d=0)
+        return NotificationFatigueFeature(
+            score=summary.fatigue_score,
+            sent_last_3d=summary.sent_last_3d,
+            dismissed_last_3d=summary.dismissed_last_3d
+        )
 
     def _extract_historical_engagement(self, context: UnifiedContext) -> HistoricalEngagementFeature:
         history = context.interaction_history

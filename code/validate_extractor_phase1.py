@@ -59,12 +59,16 @@ def validate():
         user_reports_30d=3
     )
     
-    # 5. Create a mocked NotificationSummary list (Notification Fatigue test:
+    # 5. Create a mocked NotificationSummary (Notification Fatigue test:
     # sent: 1+2=3, dismissed: 0+1=1. Score: 1/3 = 0.3333333333333333)
-    notification_summary = [
-        NotificationSummary(user_id="u_mock_001", date="2026-07-29", notifications_sent=2, notifications_dismissed=1),
-        NotificationSummary(user_id="u_mock_001", date="2026-07-28", notifications_sent=1, notifications_dismissed=0)
-    ]
+    notification_summary = NotificationSummary(
+        fatigue_score=0.3333333333333333,
+        avg_notifications=1.5,
+        avg_dismissals=0.5,
+        recent_trend="stable",
+        sent_last_3d=3,
+        dismissed_last_3d=1
+    )
     
     # 6. Instantiate UnifiedContext
     context = UnifiedContext(

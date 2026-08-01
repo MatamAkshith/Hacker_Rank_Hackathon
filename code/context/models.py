@@ -108,10 +108,12 @@ class HistoricalMessage(BaseModel):
     message_reported: Optional[bool] = None
 
 class NotificationSummary(BaseModel):
-    user_id: str
-    date: str
-    notifications_sent: int
-    notifications_dismissed: int
+    fatigue_score: float = Field(..., ge=0.0, le=1.0)
+    avg_notifications: float
+    avg_dismissals: float
+    recent_trend: str
+    sent_last_3d: int
+    dismissed_last_3d: int
 
 class ContextMetadata(BaseModel):
     has_business_context: bool
@@ -143,5 +145,5 @@ class UnifiedContext(BaseModel):
     business: Optional[Business] = None
     business_history: Optional[BusinessHistory] = None
     interaction_history: Optional[InteractionHistory] = None
-    notification_summary: Optional[List[NotificationSummary]] = None
+    notification_summary: Optional[NotificationSummary] = None
     media_metadata: Optional[MediaSummary] = None
