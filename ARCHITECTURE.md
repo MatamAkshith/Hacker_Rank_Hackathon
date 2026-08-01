@@ -1,133 +1,165 @@
 # System Architecture Specification
 
-This document details the modular system design, processing stages, and reasoning framework for the WhatsApp Message Notification Router.
+This document details the modular system philosophy, unified architecture, processing pipeline, and reasoning modules for the WhatsApp Message Notification Router.
 
 ---
 
-### Section 1: High-Level Architecture
+### Section 1: System Philosophy
 
-The system follows a modular AI pipeline where incoming WhatsApp messages are enriched with user, sender, group, business, media, and historical context before passing through multiple reasoning layers. Instead of classifying messages directly, the engine constructs contextual features, retrieves relevant historical evidence, evaluates safety and personalization, and finally produces a routing decision with confidence and supporting evidence.
+The system is designed as a Personalized Notification Intelligence Engine rather than a simple message classifier. Instead of predicting labels directly from raw messages, it progressively builds contextual understanding, evaluates trust and risk, reasons over user-specific preferences and historical behavior, and produces an explainable routing decision supported by historical evidence.
 
 ---
 
-### Section 2: Processing Pipeline
+### Section 2: Unified System Architecture Diagram
 
-The processing pipeline is organized in the following sequential stages:
+Below is the unified architectural design and flow of the notification engine:
+
+```
+                Incoming Message
+                       │
+                       ▼
+                Context Builder
+                       │
+  ┌────────────────────┼────────────────────┐
+  ▼                    ▼                    ▼
+User Context        Sender Context      Media Context
+│                    │                    │
+└──────────────┬─────┴────────────────────┘
+▼
+Unified Context Object
+▼
+Feature Extraction
+▼
+Understanding Engine
+▼
+Risk Assessment Engine
+▼
+Notification Decision Engine
+▼
+Evidence & Confidence Layer
+▼
+output.csv
+```
+
+---
+
+### Section 3: The Unified Context Object
+
+The pipeline begins with establishing the recipient user's profile and general behavior, rather than solely examining the incoming message. The system aggregates metadata, relationships, and history into a **Unified Reasoning Context**:
 
 ```
 Incoming Message
-│
-▼
-Data Loader
-│
-▼
-Context Builder
-│
-▼
-Media Understanding
-│
-▼
-Feature Extraction
-│
-▼
-Decision Engine
-│
-▼
-Evidence Retrieval
-│
-▼
-Confidence Calibration
-│
-▼
-Output Generator
+
+User Profile
+
+Group Context
+
+Business Context
+
+Sender Context
+
+Historical Messages
+
+Message Events
+
+Notification Summary
+
+Media Summary
+───────► Unified Reasoning Context
 ```
 
 ---
 
-### Section 3: Module Responsibilities
+### Section 4: Feature Categories & Purpose
 
-Each module has a single-responsibility contract:
+Calculated signals are grouped into four specialized categories to provide structured reasoning inputs:
 
-1.  **Data Loader:** Reads and validates all dataset files (`messages.csv`, `dataset/test.csv`, and media directories).
-2.  **Context Builder:** Builds a unified context object combining:
-    *   user
-    *   sender
-    *   group
-    *   business
-    *   message history
-    *   notification statistics
-3.  **Media Processor:** Processes text, image (posters/screenshots), and voice notes into a unified semantic/textual representation.
-4.  **Feature Extractor:** Computes structured reasoning signals (inputs to the decision engine, not final model outputs):
-    *   Sender Trust
-    *   Business Trust
-    *   Urgency
-    *   Promotion Score
-    *   Spam Risk
-    *   Relationship Strength
-    *   Forward Risk
-    *   Notification Fatigue
-    *   Quiet Hours
-    *   Historical Engagement
-    *   Scam Indicators
-5.  **Decomposed Decision Engine:** (Decomposed into three specialized sequential stages to avoid monolithic prompt failure)
-    *   **Stage 1: Understanding** -> Outputs: `message_type`, `summary`, `urgency`, `intent` ("What is this message actually about?")
-    *   **Stage 2: Risk Assessment** -> Outputs: `spam probability`, `scam indicators`, `sender trust`, `business trust`, `safety flags` ("Can this message be trusted?")
-    *   **Stage 3: Notification Decision** -> Outputs: `action` (`notify`, `digest`, `mute`), `reason`, `confidence`, `evidence` ("Should this user be interrupted?")
-6.  **Evidence Retriever:** Finds historical messages (`evidence_message_ids`) that justify the decision to satisfy dataset schema requirements.
-7.  **Confidence Estimator:** Assigns calibrated confidence scores based on:
-    *   feature agreement
-    *   ambiguity
-    *   historical similarity
-    *   safety overrides
-8.  **Output Generator:** Formats and creates the schema-compliant `output.csv`.
+1.  **Trust Features:** (Evaluates sender and channel legitimacy)
+    *   *Sender Trust:* Historical reaction and reply frequency from the user.
+    *   *Business Trust:* Official brand domain validation and sender profile age.
+    *   *Relationship Strength:* Role of sender in group chats (e.g. admin vs member) and mutual conversation metrics.
+2.  **Urgency Features:** (Measures time sensitivity and actionability)
+    *   *Urgency:* Detected deadlines, schedules, or requests for immediate action.
+    *   *Intent:* Goal-directed behavior in message text (e.g. coordinates meetings, updates circulars).
+    *   *Payment Indicators:* Mentions of transaction alerts, utility bills, or pending fees.
+3.  **Risk Features:** (Detects malice, noise, and spam)
+    *   *Scam Indicators:* Mentions of codes, OTPs, wallet verification, or password inputs.
+    *   *Spam Risk:* Unsolicited promotions, coupons, or messages from unsubscribed business accounts.
+    *   *Forward Risk:* Messages forwarded multiple times containing chain letters or generic motivational greetings.
+4.  **User Behaviour Features:** (Captures personalized recipient habits)
+    *   *Historical Engagement:* The user's past actions (dismissed, read, reported) on similar categories.
+    *   *Notification Fatigue:* Recipient's current daily count of notifications received vs dismissed.
+    *   *Quiet Hours:* Timestamp comparison against user's DND settings.
 
 ---
 
-### Section 4: Core Reasoning Principles
+### Section 5: The Safety Layer (Hard Override Pipeline)
 
-The system is guided by these exact five foundational principles:
-
-1.  **Personalization First:** Every message is evaluated relative to the specific recipient.
-2.  **Safety Overrides Personalization:** Clear scams, phishing, or safety risks are muted regardless of user engagement or preferences.
-3.  **Historical Behaviour Matters:** Past interaction patterns strongly influence future routing choices.
-4.  **Multimodal Consistency:** Text, images, and voice notes are unified into one common representation before reasoning.
-5.  **Explainability:** Every decision must be fully explainable through structured features and historical evidence.
-
----
-
-### Section 5: Data Flow
-
-The flow of data proceeds as follows:
+The system passes all features through a strict safety evaluation chain that overrides personal preferences:
 
 ```
-messages.csv
-↓
-context builder
-↓
-user profile
-↓
-history retrieval
-↓
-media summary
-↓
-feature vector
-↓
-reasoning
-↓
-prediction
+Safety Evaluation Chain:
+Prompt Injection Detection
+│
+▼
+Scam Detection
+│
+▼
+OTP Fraud Detection
+│
+▼
+Phishing Analysis
+│
+▼
+Fake Verification Check
+│
+▼
+Safety Override (Hard 'mute' if flagged)
+```
+
+*Rule: Safety Overrides Personalization. Any message flagged by the Safety Layer is immediately routed to `mute`, regardless of user engagement history.*
+
+---
+
+### Section 6: Decomposed 3-Stage Decision Engine & Rationale
+
+Reasoning is broken down into three specialized sequential stages to avoid monolithic prompt failure:
+
+*   **Stage 1: Understanding Engine** -> Determines what the message actually means (*Outputs: message_type, summary, urgency, intent*).
+*   **Stage 2: Risk Assessment Engine** -> Determines whether the message is trustworthy (*Outputs: spam probability, scam indicators, sender trust, business trust, safety flags*).
+*   **Stage 3: Notification Decision Engine** -> Determines whether the user should be interrupted right now (*Outputs: action [notify, digest, mute], reason, confidence, evidence*).
+
+#### Why 3 Stages instead of a Monolithic Prompt?
+1.  **Isolation of Concerns:** Prevents safety risks (e.g. prompt hijacking, scam details) from being diluted by user preference logic.
+2.  **Deterministic Overrides:** Enables hard safety rules between Stage 2 and Stage 3 to ensure instant silencing of high-risk files.
+3.  **Explainability & Debuggability:** Intermediate outputs from Stage 1 and Stage 2 can be logged and audited independently.
+
+---
+
+### Section 7: Explainability Flow
+
+Traceability is maintained end-to-end throughout the reasoning cycle:
+
+```
+Features ──► Reasoning ──► Decision Reason ──► Historical Evidence ──► Confidence Calibration ──► Final Routing Prediction
 ```
 
 ---
 
-### Section 6: Design Decisions & Justifications
+### Section 8: Confidence Strategy
 
-Engineering design decisions and justifications:
+Numerical confidence is calculated and calibrated:
 
-1.  **Decision:** Rule-assisted LLM reasoning.
-    *   **Why:** Pure prompting is inconsistent; pure rules lack flexibility. Hybrid reasoning combines the structural determinism of rules with the flexibility of LLMs.
-2.  **Decision:** Feature extraction before reasoning.
-    *   **Why:** Reduces prompt complexity while making decisions transparent and explainable.
-3.  **Decision:** Separate evidence retrieval from decision engine.
-    *   **Why:** Allows evidence selection algorithms to improve independently without affecting routing logic.
-4.  **Decision:** Decomposed 3-Stage Decision Engine over a Monolithic Engine.
-    *   **Why:** Makes the system easier to unit test, explain, evaluate, and extend than a single giant prompt.
+*   **Confidence Increases When:** Multiple feature signals agree (e.g., both DND checks and low-priority labels trigger digest), historical interactions strongly support the decision (e.g. repeated replies to work contacts), and sender trust is high.
+*   **Confidence Decreases When:** Feature signals conflict, language is ambiguous, the sender is unknown, or historical context is scarce.
+
+---
+
+### Section 9: Future Scalability
+
+The design is architected to support long-term production deployment:
+
+*   **Real-time Stream Processing:** Capable of event-driven inference at high throughput.
+*   **Online Personalization:** Supports incremental learning of user preferences without retraining from scratch.
+*   **Modular Model Swapping:** The LLM/VLM backing reasoning stages can be upgraded without changing data contracts.
+*   **Localization Support:** Structurally ready to handle multi-language messages and regional dialects.

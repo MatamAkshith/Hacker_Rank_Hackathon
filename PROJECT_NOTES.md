@@ -148,4 +148,18 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 | **Phase 4** | Advanced Contextual Routing & Decision Logic | Integrate relational contexts (history, user profile metrics, business domain verifications) and decomposed 3-stage engine. | *Upcoming* |
 | **Phase 5** | Evaluation, Calibration & Final Package | Evaluate predictions, calibrate confidence, format output, resolve all constraints, verify logs, package into `code.zip`. | *Upcoming* |
 
+### Changelog & Revision History
+
+- **2026-08-01 (Phase 2 Upgrade):** Enriched `ARCHITECTURE.md` to incorporate 9 essential architectural enhancements:
+  1. System Philosophy (Personalized Notification Intelligence Engine).
+  2. Unified System Architecture Diagram.
+  3. Detail on Unified Context Object assembly starting with user profile.
+  4. Categorized Feature Matrix (Trust, Urgency, Risk, User Behaviour).
+  5. Safety Layer hard override pipeline (scams, OTP fraud, phishing, prompt injection).
+  6. Decomposed 3-Stage Decision Engine rationale (Isolation of concerns, deterministic overrides, explainability).
+  7. End-to-end Explainability Flow traceability details.
+  8. Calibrated Confidence Strategy rules.
+  9. Future Scalability (stream processing, online learning, modular swap, localization).
+
 ---
+
