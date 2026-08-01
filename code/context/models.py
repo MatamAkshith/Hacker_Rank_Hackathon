@@ -64,6 +64,19 @@ class Business(BaseModel):
     messages_replied_30d: Optional[int] = None
     last_reply_at: Optional[str] = None
 
+class BusinessHistory(BaseModel):
+    user_id: str
+    business_id: str
+    why_user_knows_account: Optional[str] = None
+    last_activity_at: Optional[str] = None
+    allows_promotions: Optional[bool] = None
+    promotions_opted_out_at: Optional[str] = None
+    activity_count_180d: Optional[int] = None
+    messages_opened_30d: Optional[int] = None
+    messages_dismissed_30d: Optional[int] = None
+    messages_replied_30d: Optional[int] = None
+    last_reply_at: Optional[str] = None
+
 class MediaSummary(BaseModel):
     media_id: str
     media_type: str
@@ -114,7 +127,7 @@ class UnifiedContext(BaseModel):
     sender: Optional[Sender] = None
     group: Optional[Group] = None
     business: Optional[Business] = None
-    business_history: Optional[List[Dict[str, Any]]] = None
+    business_history: Optional[BusinessHistory] = None
     historical_messages: List[HistoricalMessage] = []
     historical_events: List[Dict[str, Any]] = []
     notification_summary: Optional[List[NotificationSummary]] = None

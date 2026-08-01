@@ -7,6 +7,7 @@ from code.context.models import (
     Sender,
     Group,
     Business,
+    BusinessHistory,
     MediaSummary,
     HistoricalMessage,
     NotificationSummary,
@@ -107,7 +108,7 @@ class ContextBuilder:
                 
                 biz_hist = self.loader.get_user_business_history(user_id, business_id)
                 if biz_hist:
-                    business_history = [biz_hist]
+                    business_history = BusinessHistory(**biz_hist)
                 else:
                     missing_datasets.append("user_business_history.csv")
                     
