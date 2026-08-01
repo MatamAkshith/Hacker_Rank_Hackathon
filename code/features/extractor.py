@@ -1,6 +1,34 @@
 """FeatureExtractor module."""
 from datetime import datetime
 from typing import Optional
+from config.feature_weights import (
+    BUSINESS_TRUST_ACCOUNT_AGE_NORMALIZER_DAYS,
+    BUSINESS_TRUST_ACCOUNT_AGE_WEIGHT,
+    BUSINESS_TRUST_DOMAIN_MATCH_WEIGHT,
+    BUSINESS_TRUST_REPORTS_NORMALIZER,
+    BUSINESS_TRUST_REPORTS_PENALTY_WEIGHT,
+    BUSINESS_TRUST_VERIFIED_WEIGHT,
+    FORWARD_HIGH_RISK_THRESHOLD,
+    HISTORICAL_ENGAGEMENT_COLD_START_SCORE,
+    HISTORICAL_ENGAGEMENT_OPENED_WEIGHT,
+    HISTORICAL_ENGAGEMENT_REPLIED_WEIGHT,
+    PROMOTION_KEYWORD_SCORE_CAP,
+    PROMOTION_KEYWORD_WEIGHT,
+    PROMOTION_RETAIL_CATEGORY_WEIGHT,
+    RELATIONSHIP_ADMIN_BONUS,
+    RELATIONSHIP_COLD_START_ADMIN_SCORE,
+    RELATIONSHIP_OPENED_WEIGHT,
+    RELATIONSHIP_REPLIED_WEIGHT,
+    SCAM_KEYWORD_SCORE_CAP,
+    SCAM_KEYWORD_WEIGHT,
+    SCAM_UNVERIFIED_PENALTY,
+    SCAM_VERIFIED_BUSINESS_MULTIPLIER,
+    SENDER_TRUST_DENOMINATOR_SMOOTHING,
+    SPAM_HIGH_FORWARD_WEIGHT,
+    SPAM_LOW_FORWARD_WEIGHT,
+    SPAM_REPORT_SCORE_CAP,
+    SPAM_REPORTS_NORMALIZER,
+)
 from code.context.models import UnifiedContext
 from code.features.models import (
     FeatureVector,
@@ -143,10 +171,15 @@ class FeatureExtractor:
         
         verified_val = 1.0 if verified else 0.0
         domain_match_val = 1.0 if domain_match else 0.0
-        normalized_age = min(account_age_days / 365.0, 1.0)
-        normalized_reports = min(user_reports_30d / 10.0, 1.0)
+        normalized_age = min(account_age_days / BUSINESS_TRUST_ACCOUNT_AGE_NORMALIZER_DAYS, 1.0)
+        normalized_reports = min(user_reports_30d / BUSINESS_TRUST_REPORTS_NORMALIZER, 1.0)
         
-        score = (verified_val * 0.4) + (domain_match_val * 0.3) + (normalized_age * 0.2) - (normalized_reports * 0.1)
+        score = (
+            (verified_val * BUSINESS_TRUST_VERIFIED_WEIGHT)
+            + (domain_match_val * BUSINESS_TRUST_DOMAIN_MATCH_WEIGHT)
+            + (normalized_age * BUSINESS_TRUST_ACCOUNT_AGE_WEIGHT)
+            - (normalized_reports * BUSINESS_TRUST_REPORTS_PENALTY_WEIGHT)
+        )
         score = max(0.0, min(1.0, score))
         
         return BusinessTrustFeature(
@@ -184,9 +217,12 @@ class FeatureExtractor:
             total = opened_30d + replied_30d + dismissed_30d
             
         if total == 0:
-            score = 0.5
+            score = HISTORICAL_ENGAGEMENT_COLD_START_SCORE
         else:
-            score = (opened_30d * 0.4 + replied_30d * 0.6) / total
+            score = (
+                opened_30d * HISTORICAL_ENGAGEMENT_OPENED_WEIGHT
+                + replied_30d * HISTORICAL_ENGAGEMENT_REPLIED_WEIGHT
+            ) / total
             
         score = max(0.0, min(1.0, score))
         return HistoricalEngagementFeature(
@@ -211,10 +247,13 @@ class FeatureExtractor:
             
         total_msgs = len(sender_msgs)
         if total_msgs == 0:
-            score = 0.2 if is_admin else 0.0
+            score = RELATIONSHIP_COLD_START_ADMIN_SCORE if is_admin else 0.0
         else:
-            base_ratio = (opened_count * 0.4 + replied_count * 0.6) / total_msgs
-            admin_bonus = 0.2 if is_admin else 0.0
+            base_ratio = (
+                opened_count * RELATIONSHIP_OPENED_WEIGHT
+                + replied_count * RELATIONSHIP_REPLIED_WEIGHT
+            ) / total_msgs
+            admin_bonus = RELATIONSHIP_ADMIN_BONUS if is_admin else 0.0
             score = min(1.0, base_ratio + admin_bonus)
             
         score = max(0.0, min(1.0, score))
@@ -227,7 +266,7 @@ class FeatureExtractor:
 
     def _extract_forward_risk(self, context: UnifiedContext) -> ForwardRiskFeature:
         count = context.conversation.message.forwarded_count if context.conversation.message.forwarded_count is not None else 0
-        is_high_risk = count >= 5
+        is_high_risk = count >= FORWARD_HIGH_RISK_THRESHOLD
         return ForwardRiskFeature(
             is_high_risk=is_high_risk,
             forwarded_count=count
@@ -239,11 +278,19 @@ class FeatureExtractor:
         if is_group and sender:
             read_count = sender.messages_read_30d or 0
             replies_count = sender.replies_sent_30d or 0
-            score = replies_count / (read_count + 1) if read_count >= 0 else 0.0
+            score = (
+                replies_count / (read_count + SENDER_TRUST_DENOMINATOR_SMOOTHING)
+                if read_count >= 0
+                else 0.0
+            )
         elif context.recipient:
             opened = context.recipient.messages_opened_30d or 0
             replied = context.recipient.messages_replied_30d or 0
-            score = replied / (opened + 1) if opened >= 0 else 0.0
+            score = (
+                replied / (opened + SENDER_TRUST_DENOMINATOR_SMOOTHING)
+                if opened >= 0
+                else 0.0
+            )
             read_count = opened
             replies_count = replied
         else:
@@ -279,8 +326,11 @@ class FeatureExtractor:
             cat = biz.category.lower()
             is_retail = any(c in cat for c in ["shopping", "retail", "e-commerce", "marketing", "store"])
             
-        kw_score = min(len(matched_promo) * 0.35, 0.7)
-        cat_score = 0.3 if is_retail else 0.0
+        kw_score = min(
+            len(matched_promo) * PROMOTION_KEYWORD_WEIGHT,
+            PROMOTION_KEYWORD_SCORE_CAP,
+        )
+        cat_score = PROMOTION_RETAIL_CATEGORY_WEIGHT if is_retail else 0.0
         score = min(1.0, kw_score + cat_score)
         
         return PromotionFeature(
@@ -299,8 +349,12 @@ class FeatureExtractor:
             
         forwarded_count = context.conversation.message.forwarded_count if context.conversation.message.forwarded_count is not None else 0
         
-        report_score = min(user_reported / 10.0, 0.6)
-        fwd_score = 0.4 if forwarded_count >= 5 else (0.2 if forwarded_count > 0 else 0.0)
+        report_score = min(user_reported / SPAM_REPORTS_NORMALIZER, SPAM_REPORT_SCORE_CAP)
+        fwd_score = (
+            SPAM_HIGH_FORWARD_WEIGHT
+            if forwarded_count >= FORWARD_HIGH_RISK_THRESHOLD
+            else (SPAM_LOW_FORWARD_WEIGHT if forwarded_count > 0 else 0.0)
+        )
         score = min(1.0, report_score + fwd_score)
         
         return SpamRiskFeature(
@@ -317,12 +371,19 @@ class FeatureExtractor:
         biz = context.business.profile if context.business else None
         verified_business = bool(biz and biz.verified)
         
-        scam_kw_score = min(len(matched_scam) * 0.4, 0.8)
-        unverified_penalty = 0.2 if (biz and not verified_business) or (not biz and matched_scam) else 0.0
+        scam_kw_score = min(
+            len(matched_scam) * SCAM_KEYWORD_WEIGHT,
+            SCAM_KEYWORD_SCORE_CAP,
+        )
+        unverified_penalty = (
+            SCAM_UNVERIFIED_PENALTY
+            if (biz and not verified_business) or (not biz and matched_scam)
+            else 0.0
+        )
         
         raw_score = min(1.0, scam_kw_score + unverified_penalty)
         if verified_business:
-            raw_score = raw_score * 0.5
+            raw_score = raw_score * SCAM_VERIFIED_BUSINESS_MULTIPLIER
             
         score = max(0.0, min(1.0, raw_score))
         return ScamRiskFeature(
