@@ -181,6 +181,10 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Sprint 1 - Task 6):** Task 6 (ContextMetadata): Added `ContextMetadata` to `UnifiedContext` to provide lightweight visibility into context completeness, preventing repetitive null checks downstream.
 - **2026-08-01 (Sprint 1 Validation):** Created and executed `test_sprint1.py` to verify DataLoader shapes, ContextBuilder component mapping, conversation branches, media parsing, and full dataset stress testing. All tests passed.
 
+## Sprint 2
+
+- **2026-08-01 (Sprint 2 - Scaffolding):** Scaffolded `code/features/` directory and implemented `models.py` (nested, explainable computation lineage Pydantic models) and `extractor.py` (empty skeleton wrapper).
+
 ---
 
 
