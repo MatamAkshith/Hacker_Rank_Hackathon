@@ -186,6 +186,7 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Sprint 2 - Scaffolding):** Scaffolded `code/features/` directory and implemented `models.py` (nested, explainable computation lineage Pydantic models) and `extractor.py` (empty skeleton wrapper).
 - **2026-08-01 (Sprint 2 - Features Phase 1):** Implemented deterministic extraction logic in `extractor.py` for Quiet Hours, Business Trust, and Notification Fatigue, returning fully populated explainable feature models. Created `validate_extractor_phase1.py` validating nested structure and score lineages.
 - **2026-08-01 (Sprint 2 - Features Phase 2):** Implemented deterministic extraction logic in `extractor.py` for Historical Engagement, Relationship Strength, and Forward Risk. Created `validate_extractor_phase2.py` validating outputs and cold-start fallback handling.
+- **2026-08-01 (Sprint 2 - Features Phase 3):** Completed the deterministic feature extraction suite in `extractor.py` by implementing Promotion Score, Spam Risk, Scam Risk, Sender Trust, and Urgency features. Created `validate_extractor_phase3.py` verifying normal, promotional, and high-risk scam test cases.
 
 ---
 

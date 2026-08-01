@@ -45,32 +45,20 @@ class FeatureExtractor:
         # 6. Forward Risk (RiskFeatures)
         forward_risk_feat = self._extract_forward_risk(context)
         
-        # Default fallbacks for remaining un-implemented features to satisfy schema validation
-        sender_trust_feat = SenderTrustFeature(
-            score=0.0,
-            messages_read=0,
-            replies_sent=0,
-            is_group=False
-        )
-        urgency_feat = UrgencyFeature(
-            is_urgent=False,
-            matched_keywords=[]
-        )
-        promotion_feat = PromotionFeature(
-            score=0.0,
-            matched_promo_keywords=[],
-            is_retail_category=False
-        )
-        spam_risk_feat = SpamRiskFeature(
-            score=0.0,
-            user_reported_30d=0,
-            forwarded_count=0
-        )
-        scam_risk_feat = ScamRiskFeature(
-            score=0.0,
-            matched_scam_keywords=[],
-            verified_business=False
-        )
+        # 7. Sender Trust (TrustFeatures)
+        sender_trust_feat = self._extract_sender_trust(context)
+        
+        # 8. Urgency (UrgencyFeatures)
+        urgency_feat = self._extract_urgency(context)
+        
+        # 9. Promotion Score (UrgencyFeatures)
+        promotion_feat = self._extract_promotion(context)
+        
+        # 10. Spam Risk (RiskFeatures)
+        spam_risk_feat = self._extract_spam_risk(context)
+        
+        # 11. Scam Risk (RiskFeatures)
+        scam_risk_feat = self._extract_scam_risk(context)
         
         # Assemble nested structures
         trust = TrustFeatures(
@@ -203,7 +191,7 @@ class FeatureExtractor:
         
         total = opened_30d + replied_30d + dismissed_30d
         if total == 0:
-            score = 0.5  # Cold start neutral fallback
+            score = 0.5
         else:
             score = (opened_30d * 0.4 + replied_30d * 0.6) / total
             
@@ -249,4 +237,98 @@ class FeatureExtractor:
         return ForwardRiskFeature(
             is_high_risk=is_high_risk,
             forwarded_count=count
+        )
+
+    def _extract_sender_trust(self, context: UnifiedContext) -> SenderTrustFeature:
+        is_group = context.message.conversation_type == "group"
+        if is_group and context.sender:
+            read_count = context.sender.messages_read_30d or 0
+            replies_count = context.sender.replies_sent_30d or 0
+            score = replies_count / (read_count + 1) if read_count >= 0 else 0.0
+        elif context.user:
+            opened = context.user.messages_opened_30d or 0
+            replied = context.user.messages_replied_30d or 0
+            score = replied / (opened + 1) if opened >= 0 else 0.0
+            read_count = opened
+            replies_count = replied
+        else:
+            read_count = 0
+            replies_count = 0
+            score = 0.0
+            
+        score = max(0.0, min(1.0, score))
+        return SenderTrustFeature(
+            score=score,
+            messages_read=read_count,
+            replies_sent=replies_count,
+            is_group=is_group
+        )
+
+    def _extract_urgency(self, context: UnifiedContext) -> UrgencyFeature:
+        text = (context.message.message_text or "").lower()
+        urgency_keywords = ["urgent", "immediately", "asap", "due by", "expires", "deadline", "action required", "attention required", "important update"]
+        matched = [kw for kw in urgency_keywords if kw in text]
+        return UrgencyFeature(
+            is_urgent=len(matched) > 0,
+            matched_keywords=matched
+        )
+
+    def _extract_promotion(self, context: UnifiedContext) -> PromotionFeature:
+        text = (context.message.message_text or "").lower()
+        promo_keywords = ["sale", "discount", "off", "coupon", "promo", "deal", "limited time", "buy now", "free shipping", "cashback", "offer", "save"]
+        matched_promo = [kw for kw in promo_keywords if kw in text]
+        
+        is_retail = False
+        if context.business and context.business.category:
+            cat = context.business.category.lower()
+            is_retail = any(c in cat for c in ["shopping", "retail", "e-commerce", "marketing", "store"])
+            
+        kw_score = min(len(matched_promo) * 0.35, 0.7)
+        cat_score = 0.3 if is_retail else 0.0
+        score = min(1.0, kw_score + cat_score)
+        
+        return PromotionFeature(
+            score=score,
+            matched_promo_keywords=matched_promo,
+            is_retail_category=is_retail
+        )
+
+    def _extract_spam_risk(self, context: UnifiedContext) -> SpamRiskFeature:
+        user_reported = 0
+        if context.business and context.business.user_reports_30d is not None:
+            user_reported = context.business.user_reports_30d
+        elif context.user and context.user.messages_reported_30d is not None:
+            user_reported = context.user.messages_reported_30d
+            
+        forwarded_count = context.message.forwarded_count if context.message.forwarded_count is not None else 0
+        
+        report_score = min(user_reported / 10.0, 0.6)
+        fwd_score = 0.4 if forwarded_count >= 5 else (0.2 if forwarded_count > 0 else 0.0)
+        score = min(1.0, report_score + fwd_score)
+        
+        return SpamRiskFeature(
+            score=score,
+            user_reported_30d=user_reported,
+            forwarded_count=forwarded_count
+        )
+
+    def _extract_scam_risk(self, context: UnifiedContext) -> ScamRiskFeature:
+        text = (context.message.message_text or "").lower()
+        scam_keywords = ["otp", "login code", "verify pin", "pay reattempt fee", "release package", "scan qr", "bank account blocked", "urgent action required", "winner", "lottery", "claim reward", "transfer money"]
+        matched_scam = [kw for kw in scam_keywords if kw in text]
+        
+        verified_business = bool(context.business and context.business.verified)
+        
+        scam_kw_score = min(len(matched_scam) * 0.4, 0.8)
+        unverified_penalty = 0.2 if (context.business and not verified_business) or (not context.business and matched_scam) else 0.0
+        
+        raw_score = min(1.0, scam_kw_score + unverified_penalty)
+        if verified_business:
+            raw_score = raw_score * 0.5
+            
+        score = max(0.0, min(1.0, raw_score))
+        return ScamRiskFeature(
+            score=score,
+            matched_scam_keywords=matched_scam,
+            verified_business=verified_business
         )
