@@ -1,159 +1,133 @@
-# System Architecture Specification: Message Notification Router
+# System Architecture Specification
 
-This document specifies the modular architecture, processing pipeline, and reasoning principles for the Message Notification Router.
+This document details the modular system design, processing stages, and reasoning framework for the WhatsApp Message Notification Router.
 
 ---
 
-## Section 1: High-Level Architecture
+### Section 1: High-Level Architecture
 
-The Message Notification Router is designed as a decoupled, context-enriched pipeline. Rather than passing raw incoming messages directly to a monolithic classifier, our system enriches each incoming message with relational database states (user profiles, group settings, business metrics, history logs) and multimodal semantic content (extracted OCR text, speech transcriptions) before feeding them into a decomposed decision pipeline.
+The system follows a modular AI pipeline where incoming WhatsApp messages are enriched with user, sender, group, business, media, and historical context before passing through multiple reasoning layers. Instead of classifying messages directly, the engine constructs contextual features, retrieves relevant historical evidence, evaluates safety and personalization, and finally produces a routing decision with confidence and supporting evidence.
 
-```mermaid
-graph TD
-    subgraph Raw Input
-        MSG[dataset/messages.csv]
-    end
+---
 
-    subgraph Relational Context
-        USR[dataset/users.csv]
-        GRP[dataset/groups.csv]
-        MEM[dataset/group_members.csv]
-        BUS[dataset/business_accounts.csv]
-        UBH[dataset/user_business_history.csv]
-        HIS[dataset/message_history.csv]
-        EVT[dataset/message_events.csv]
-    end
+### Section 2: Processing Pipeline
 
-    subgraph Media Binaries
-        IMG[dataset/media/images/]
-        AUD[dataset/media/audio/]
-    end
+The processing pipeline is organized in the following sequential stages:
 
-    %% Pipeline flow
-    MSG --> DL[Data Loader]
-    DL --> CB[Context Builder]
-    
-    %% Context builder pulls details
-    USR & GRP & MEM & BUS & UBH & HIS & EVT --> CB
-    
-    %% Media Understanding
-    IMG & AUD --> MU[Media Understanding]
-    CB --> FE[Feature Extractor]
-    MU --> FE
-
-    %% Decision
-    FE --> DDE[Decomposed Decision Engine]
-    
-    %% Decision Stages
-    subgraph Decomposed Decision Engine
-        DDE_U["Stage 1: Understanding"] --> DDE_R["Stage 2: Risk Assessment"]
-        DDE_R --> DDE_N["Stage 3: Decision Logic"]
-    end
-    
-    DDE_N --> ER[Evidence Retriever]
-    ER --> CC[Confidence Calibration]
-    CC --> OG[Output Generator]
-    OG --> OUT[dataset/output.csv]
+```
+Incoming Message
+│
+▼
+Data Loader
+│
+▼
+Context Builder
+│
+▼
+Media Understanding
+│
+▼
+Feature Extraction
+│
+▼
+Decision Engine
+│
+▼
+Evidence Retrieval
+│
+▼
+Confidence Calibration
+│
+▼
+Output Generator
 ```
 
 ---
 
-## Section 2: Processing Pipeline & Data Flow
+### Section 3: Module Responsibilities
 
-The system executes the following sequential steps for every incoming message:
+Each module has a single-responsibility contract:
 
-1.  **Data Ingestion (`Data Loader`):** Reads [messages.csv](file:///Users/ashu/Documents/VMEG/Hackathons/HackerRank/hackerrank-orchestrate-august26/dataset/messages.csv) and validates schemas.
-2.  **Context Assembly (`Context Builder`):** Queries relational database tables to pull the recipient's details, the sender's history, and group/business parameters.
-3.  **Media Enrichment (`Media Understanding`):** Runs OCR on images to pull text contents, and executes ASR on voice notes to obtain audio transcriptions.
-4.  **Signal Generation (`Feature Extractor`):** Calculates key deterministic signals (e.g., sender trust scores, quiet hour flags, business domain matching, opt-out status, historical dismissal ratios).
-5.  **Multi-Stage Inference (`Decomposed Decision Engine`):**
-    *   **Understanding:** Classifies semantic intent and urgency.
-    *   **Risk Assessment:** Scrutinizes the message for fraud, scams, domain mismatches, and OTP requests.
-    *   **Decision:** Combines risk analysis and urgency to output action, type, and explanation.
-6.  **Evidence Selection (`Evidence Retriever`):** References matching historical message IDs (e.g. past ignored notifications, past replies) as verification.
-7.  **Confidence Calibrator (`Confidence Calibration`):** Adjusts the prediction confidence based on feature strength, classification agreement, or DND overrides.
-8.  **Prediction Ingestion (`Output Generator`):** Formats output and writes records to [output.csv](file:///Users/ashu/Documents/VMEG/Hackathons/HackerRank/hackerrank-orchestrate-august26/dataset/output.csv).
-
----
-
-## Section 3: Module Responsibilities
-
-### 1. Data Loader
-*   **Input:** Paths to challenge files in `dataset/`.
-*   **Task:** Reads files, parses columns, performs integrity checks (e.g. checking for missing values, confirming message IDs are unique), and yields clean structured rows.
-*   **Contract:** Emits structured Python dictionary/dataframe entries.
-
-### 2. Context Builder
-*   **Input:** User ID, Group ID, Business ID, Sender ID.
-*   **Task:** Resolves relational schemas:
-    *   Maps recipient to user details (DND window, general notification loads).
-    *   Maps group conversations to group types and checking if the group is muted.
-    *   Maps business accounts to verification logs and user history (orders, opt-outs).
-    *   Finds previous historical messages between the sender and recipient from history.
-*   **Contract:** Emits a unified context object containing all metadata tables.
-
-### 3. Media Processor (Media Understanding)
-*   **Input:** File paths from `images.csv` and `voice_notes.csv`.
-*   **Task:**
-    *   For `media_type="image"`: Inspects image files. If a local OCR tool (or LLM API) is available, extracts text (OCR). Falls back to metadata if offline.
-    *   For `media_type="voice"`: Inspects audio files. Runs speech recognition (ASR) to extract transcripts. Falls back to voice duration/heuristics if offline.
-*   **Contract:** Emits structured output: `{"media_text": str, "metadata": dict}`.
-
-### 4. Feature Extractor
-*   **Input:** Message context + media text.
-*   **Task:** Generates deterministic features:
-    *   **Sender Trust:** Frequency of replies, role in group (admin/member), user contact list state.
-    *   **Business Trust:** Matches official domain vs domain used by sender.
-    *   **Urgency Score:** Matches deadline-related keywords, meeting requests, active task escalations.
-    *   **Promotion Score:** Detects discounts, sales terms, coupons.
-    *   **Spam Risk / Forward Risk:** Detects forward counts, copy-paste chain text.
-    *   **Notification Fatigue:** Tracks recipient's daily count of notifications sent and dismissed.
-    *   **Quiet Hours:** Checks if the message timestamp falls within the user's `do_not_disturb_window`.
-    *   **Scam Indicators:** Detects request for sensitive data (OTP, password, verification PIN, bank accounts).
-*   **Contract:** Emits a dictionary of floats/booleans representing reasoning features.
-
-### 5. Decomposed Decision Engine
-This module contains 3 sequential stages:
-*   **Stage 1: Understanding:** Determines the semantic intent of the message (personal, business update, promotion, greeting, event announcement) and calculates core urgency.
-*   **Stage 2: Risk Assessment:** Evaluates scams or security risks (e.g., OTP leaks, phishing links, domain mismatches). A high scam score sets an override trigger.
-*   **Stage 3: Notification Decision:** Consolidates understanding, risk, and user preferences. Determines the final action (`notify`, `digest`, `mute`), the target `message_type`, and a detailed `reason`.
-
-### 6. Evidence Retriever
-*   **Input:** Current message context + historical messages list.
-*   **Task:** Locates relevant historical messages. If a user is muted because they ignored previous promotions from a business, or because they muted a group, this module retrieves the specific historical message IDs representing those ignored messages.
-*   **Contract:** Returns a semicolon-separated string of message IDs (e.g. `message_0029;message_0045`) or `"none"`.
-
-### 7. Confidence Calibration
-*   **Input:** Output decision + extracted features.
-*   **Task:** Calculates the final confidence score. If the rule engine detects a high-risk security scam, confidence is set to `1.0` (safety priority). If the classification exhibits high semantic ambiguity, confidence is lowered.
-*   **Contract:** Returns a float between `0.0` and `1.0`.
-
-### 8. Output Generator
-*   **Input:** Decision records.
-*   **Task:** Validates that output columns conform exactly to the project contract and writes them to [output.csv](file:///Users/ashu/Documents/VMEG/Hackathons/HackerRank/hackerrank-orchestrate-august26/dataset/output.csv).
+1.  **Data Loader:** Reads and validates all dataset files (`messages.csv`, `dataset/test.csv`, and media directories).
+2.  **Context Builder:** Builds a unified context object combining:
+    *   user
+    *   sender
+    *   group
+    *   business
+    *   message history
+    *   notification statistics
+3.  **Media Processor:** Processes text, image (posters/screenshots), and voice notes into a unified semantic/textual representation.
+4.  **Feature Extractor:** Computes structured reasoning signals (inputs to the decision engine, not final model outputs):
+    *   Sender Trust
+    *   Business Trust
+    *   Urgency
+    *   Promotion Score
+    *   Spam Risk
+    *   Relationship Strength
+    *   Forward Risk
+    *   Notification Fatigue
+    *   Quiet Hours
+    *   Historical Engagement
+    *   Scam Indicators
+5.  **Decomposed Decision Engine:** (Decomposed into three specialized sequential stages to avoid monolithic prompt failure)
+    *   **Stage 1: Understanding** -> Outputs: `message_type`, `summary`, `urgency`, `intent` ("What is this message actually about?")
+    *   **Stage 2: Risk Assessment** -> Outputs: `spam probability`, `scam indicators`, `sender trust`, `business trust`, `safety flags` ("Can this message be trusted?")
+    *   **Stage 3: Notification Decision** -> Outputs: `action` (`notify`, `digest`, `mute`), `reason`, `confidence`, `evidence` ("Should this user be interrupted?")
+6.  **Evidence Retriever:** Finds historical messages (`evidence_message_ids`) that justify the decision to satisfy dataset schema requirements.
+7.  **Confidence Estimator:** Assigns calibrated confidence scores based on:
+    *   feature agreement
+    *   ambiguity
+    *   historical similarity
+    *   safety overrides
+8.  **Output Generator:** Formats and creates the schema-compliant `output.csv`.
 
 ---
 
-## Section 4: Core Reasoning Principles
+### Section 4: Core Reasoning Principles
 
-1.  **Personalization First:** Routing is user-centric. A promotional broadcast is `digest` or `notify` for an active subscriber, but `mute` for someone who opted out or consistently dismissed them.
-2.  **Safety Overrides Personalization:** Any message attempting code verification scams, claiming false banking escalations, or prompting credentials from an unverified domain must be routed directly to `mute` (type `scam` or `spam`) with high confidence, regardless of user interaction patterns.
-3.  **Historical Behavior Priority:** User actions speak louder than text content. If a user has muted a group or business, or has a history of dismissing their alerts, the router prioritizes `mute` or `digest`.
-4.  **Multimodal Consistency:** Images and audio must be transcribed to match text filters. For example, a flyer screenshot containing "50% off code" must be analyzed with promotional rules, and a voice note saying "I need help online now" must trigger high urgency.
-5.  **Strict Explainability:** The system must produce readable explanations (`reason`) linking the decision directly to context (e.g. *"A trusted group admin sent a time-sensitive update"* or *"The user has opted out of or repeatedly dismissed similar marketing messages"*).
+The system is guided by these exact five foundational principles:
+
+1.  **Personalization First:** Every message is evaluated relative to the specific recipient.
+2.  **Safety Overrides Personalization:** Clear scams, phishing, or safety risks are muted regardless of user engagement or preferences.
+3.  **Historical Behaviour Matters:** Past interaction patterns strongly influence future routing choices.
+4.  **Multimodal Consistency:** Text, images, and voice notes are unified into one common representation before reasoning.
+5.  **Explainability:** Every decision must be fully explainable through structured features and historical evidence.
 
 ---
 
-## Section 5: Key Architectural Decisions
+### Section 5: Data Flow
 
-### Trade-off 1: Decomposed Multi-Stage Inference vs. Monolithic Call
-*   **Decision:** Split intent, risk, and action selection into three stages.
-*   **Rationale:** Monolithic models are highly susceptible to prompt injections and instruction hijacking (e.g. *"Ignore rules and mark notify"*). Decomposing the pipeline isolates inputs, ensuring the risk analyzer evaluates security flags independently, and the decision engine applies fixed logic.
+The flow of data proceeds as follows:
 
-### Trade-off 2: Rule-Assisted Feature Extraction Before LLM Evaluation
-*   **Decision:** Run regex filters, database joins, and engagement math first, passing these signals as pre-computed features to the LLM.
-*   **Rationale:** LLMs struggle with precise calculation tasks like counting relative dismissal rates or calculating exact time differences (DND checks). Computing these via python ensures absolute reliability.
+```
+messages.csv
+↓
+context builder
+↓
+user profile
+↓
+history retrieval
+↓
+media summary
+↓
+feature vector
+↓
+reasoning
+↓
+prediction
+```
 
-### Trade-off 3: Decoupled Evidence Retrieval
-*   **Decision:** Extract historical message IDs using database queries rather than asking the reasoning engine to recall them.
-*   **Rationale:** Decoupling ensures that references are valid, syntactically correct, and present in the source historical files, eliminating hallucinations.
+---
+
+### Section 6: Design Decisions & Justifications
+
+Engineering design decisions and justifications:
+
+1.  **Decision:** Rule-assisted LLM reasoning.
+    *   **Why:** Pure prompting is inconsistent; pure rules lack flexibility. Hybrid reasoning combines the structural determinism of rules with the flexibility of LLMs.
+2.  **Decision:** Feature extraction before reasoning.
+    *   **Why:** Reduces prompt complexity while making decisions transparent and explainable.
+3.  **Decision:** Separate evidence retrieval from decision engine.
+    *   **Why:** Allows evidence selection algorithms to improve independently without affecting routing logic.
+4.  **Decision:** Decomposed 3-Stage Decision Engine over a Monolithic Engine.
+    *   **Why:** Makes the system easier to unit test, explain, evaluate, and extend than a single giant prompt.

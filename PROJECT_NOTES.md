@@ -54,13 +54,30 @@ Design and implement a personalized Message Notification Router for WhatsApp tha
 *   **Verification Scams:** Any message from an unknown sender requesting OTPs, login verification, payment QR scans, or using false urgency must be flagged as `mute`/`scam`.
 *   **Contextual Personalization:** A message must be routed based on user history. If a user consistently ignores/dismisses/reports messages from a specific group or business, similar incoming messages should be muted, even if they seem benign.
 
-### System Architecture Summary (Phase 2 Design)
-Our modular system architecture decouples data ingestion, context enrichment, media processing, feature extraction, and classification reasoning into separate pipeline stages. Pre-computed features (such as sender trust ratios and quiet hours DND flags) are combined with raw OCR/ASR extracts from media, feeding a **Decomposed 3-Stage Decision Engine**:
-1. **Understanding Stage:** Identifies semantic intent and basic urgency.
-2. **Risk Assessment Stage:** Evaluates potential scams, OTP requests, and phishing links.
-3. **Decision Stage:** Determines final action (`notify`, `digest`, `mute`), category, and explanation.
+### System Architecture & Pipeline Design (Phase 2 Spec)
 
-This pipeline ensures prompt injection resilience, consistent media handling, and deterministic evidence linking.
+The system is designed as a modular pipeline to enrich incoming messages with recipient profiles, sender relationships, group/business details, and media content:
+
+```
+Incoming Message -> Data Loader -> Context Builder -> Media Understanding -> Feature Extraction -> Decision Engine -> Evidence Retrieval -> Confidence Calibration -> Output Generator
+```
+
+#### Module Architecture and Key Components
+1. **Data Loader:** Reads and validates all dataset files (`messages.csv`, `dataset/test.csv`, and media directories).
+2. **Context Builder:** Builds a unified context combining user profile, sender/group/business details, history, and stats.
+3. **Media Processor:** Resolves visual/audio inputs into a unified semantic/textual representation.
+4. **Feature Extractor:** Computes structured reasoning signals (Sender/Business Trust, Urgency, Promotion, Spam, Relationship Strength, Fatigue, Quiet Hours, Scam).
+5. **Decomposed Decision Engine:** Consists of Stage 1 (Understanding: intent/urgency), Stage 2 (Risk Assessment: safety/scam indicators), and Stage 3 (Decision: action/reason).
+6. **Evidence Retriever:** Pulls supporting historical message IDs.
+7. **Confidence Estimator:** Calculates calibrated confidence based on feature agreement, ambiguity, and safety overrides.
+8. **Output Generator:** Compiles output rows for `output.csv`.
+
+#### Foundational Reasoning Principles
+- **Personalization First:** Every message is evaluated relative to the specific recipient.
+- **Safety Overrides Personalization:** Clear scams, phishing, or safety risks are muted regardless of user engagement or preferences.
+- **Historical Behaviour Matters:** Past interaction patterns strongly influence future routing choices.
+- **Multimodal Consistency:** Text, images, and voice notes are unified into one common representation before reasoning.
+- **Explainability:** All routing decisions are documented via reasons and historical evidence.
 
 ---
 
@@ -125,9 +142,9 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 
 | Phase | Description | Key Changes / Deliverables | Status |
 | :--- | :--- | :--- | :--- |
-| **Phase 1** | Problem Analysis & Workspace Initialization | Created `PROJECT_NOTES.md`, executed repository inventory audit, analyzed schemas, performed DND & data distributions checks. | **Completed** |
-| **Phase 2** | System Architecture & Modular Design | Created `ARCHITECTURE.md` specifying data loaders, feature extractors, multi-stage decision stages, and evidence retrievers. | **Completed** |
-| **Phase 3** | Pipeline & Feature Engineering Implementation | Build the core pipeline structure, local deterministic parser, media OCR/ASR integrations, and feature extraction engine. | **Next** |
+| **Phase 1** | Problem Analysis & Workspace Initialization | Created `PROJECT_NOTES.md`, executed repository inventory audit, analyzed schemas, performed DND & data distributions checks. | **COMPLETE** |
+| **Phase 2** | System Architecture and Modular Design Specification | Created `ARCHITECTURE.md` with complete 6-section spec (Loader, Builder, Processor, Extractor, Engine, Retriever, Estimator, Generator). | **COMPLETE** |
+| **Phase 3** | Pipeline & Feature Extraction Setup | Implement rule-assisted parser, local deterministic metrics, media transcribers, and stage logic. | **NEXT** |
 | **Phase 4** | Advanced Contextual Routing & Decision Logic | Integrate relational contexts (history, user profile metrics, business domain verifications) and decomposed 3-stage engine. | *Upcoming* |
 | **Phase 5** | Evaluation, Calibration & Final Package | Evaluate predictions, calibrate confidence, format output, resolve all constraints, verify logs, package into `code.zip`. | *Upcoming* |
 
