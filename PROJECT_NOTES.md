@@ -160,6 +160,8 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
   7. End-to-end Explainability Flow traceability details.
   8. Calibrated Confidence Strategy rules.
   9. Future Scalability (stream processing, online learning, modular swap, localization).
+- **2026-08-01 (Phase 2 Spec Updates):** Added Technology Stack, Directory Structure, and Strict Object Data Contracts to `ARCHITECTURE.md`.
 
 ---
+
 

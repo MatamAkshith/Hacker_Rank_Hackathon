@@ -163,3 +163,72 @@ The design is architected to support long-term production deployment:
 *   **Online Personalization:** Supports incremental learning of user preferences without retraining from scratch.
 *   **Modular Model Swapping:** The LLM/VLM backing reasoning stages can be upgraded without changing data contracts.
 *   **Localization Support:** Structurally ready to handle multi-language messages and regional dialects.
+
+---
+
+### Section 10: Technology Stack
+
+The WhatsApp Notification Router implementation is built on the following technologies:
+*   **Language:** Python 3.12
+*   **Core Libraries:** `pandas`, `numpy`, `pathlib`, `pydantic` (for strict object validation)
+*   **LLM Reasoning:** Gemini 2.5 Pro
+*   **Vision & OCR:** Gemini Vision
+*   **Audio Processing:** Whisper / Gemini Audio
+*   **Configuration Management:** `python-dotenv`
+*   **Evaluation:** `scikit-learn` (optional, for metric calculation)
+
+---
+
+### Section 11: Folder Architecture
+
+The codebase directories are organized under `code/` to isolate modules:
+
+```text
+code/
+├── main.py                 # Pipeline orchestrator
+├── config.py               # Environment and LLM configurations
+├── loader/                 # Dataset and media ingestion
+├── context/                # Context Builder module
+├── media/                  # Media Processor (Vision/Audio/OCR)
+├── features/               # Feature Extractor module
+├── reasoning/              # 3-Stage Decision Engine (Understanding, Risk, Decision)
+├── retrieval/              # Evidence Retriever module
+├── confidence/             # Confidence Estimator module
+├── evaluation/             # Pipeline evaluation and metrics
+├── utils/                  # Shared helper functions
+├── prompts/                # Version-controlled LLM prompt templates
+└── output/                 # Generated output.csv and logs
+```
+
+---
+
+### Section 12: Data Contracts & Object Formalization
+
+The pipeline is strictly typed to prevent validation errors and leakage. The system maps information across typed objects rather than passing raw dictionaries:
+
+```
+Object Flow Pipeline:
+Message ──► UnifiedContext ──► FeatureVector ──► UnderstandingResult ──► RiskAssessment ──► DecisionResult ──► OutputRow
+```
+
+#### Module API Contracts
+
+*   **Context Builder**
+    *   *Input:* `Message` (Raw row) + `Media` + `External Data`
+    *   *Output:* `UnifiedContext`
+*   **Feature Extractor**
+    *   *Input:* `UnifiedContext`
+    *   *Output:* `FeatureVector`
+*   **Decomposed Decision Engine - Stage 1 (Understanding)**
+    *   *Input:* `FeatureVector`
+    *   *Output:* `UnderstandingResult`
+*   **Decomposed Decision Engine - Stage 2 (Risk)**
+    *   *Input:* `UnderstandingResult` + `FeatureVector`
+    *   *Output:* `RiskAssessment`
+*   **Decomposed Decision Engine - Stage 3 (Notification)**
+    *   *Input:* `RiskAssessment` + `UnderstandingResult`
+    *   *Output:* `DecisionResult`
+*   **Output Generator**
+    *   *Input:* `DecisionResult` + `EvidenceResult` + `ConfidenceScore`
+    *   *Output:* `OutputRow` (Target schema for output.csv)
+
