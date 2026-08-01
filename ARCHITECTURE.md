@@ -148,10 +148,11 @@ Features ──► Reasoning ──► Decision Reason ──► Historical Evid
 
 ### Section 8: Confidence Strategy
 
-Numerical confidence is calculated and calibrated:
-
-*   **Confidence Increases When:** Multiple feature signals agree (e.g., both DND checks and low-priority labels trigger digest), historical interactions strongly support the decision (e.g. repeated replies to work contacts), and sender trust is high.
-*   **Confidence Decreases When:** Feature signals conflict, language is ambiguous, the sender is unknown, or historical context is scarce.
+Confidence is calibrated into strict categorical buckets rather than continuous numerical values:
+*   **Very High (`0.90-1.00`):** Multiple feature signals agree, historical interactions strongly support the decision, or safety overrides trigger a hard action.
+*   **High (`0.75-0.90`):** Strong features with high sender/business trust, matching historical engagement.
+*   **Medium (`0.50-0.75`):** Standard message signals with minor ambiguity or moderate historical interaction.
+*   **Low (`<0.50`):** Conflicting signals, ambiguous language, unknown senders, or scarce historical context.
 
 ---
 
@@ -166,7 +167,19 @@ The design is architected to support long-term production deployment:
 
 ---
 
-### Section 10: Technology Stack
+### Section 10: Decision Priority Order
+
+Below is the strict hierarchy used for conflict resolution when determining notification actions:
+1.  **Safety:** Scam or security flags always take top priority. A message classified as high-risk by the Safety Layer is immediately routed to `mute`, overriding all other preferences.
+2.  **Urgency:** High urgency updates (e.g., active deadlines, emergencies, critical school/society notices) override recipient time preferences, triggering `notify` even during quiet hours.
+3.  **Relationship:** Direct personal connections and admin roles prioritize direct notification.
+4.  **Personalization:** User-specific affinities and channel category histories guide routing.
+5.  **Notification Fatigue:** If daily load thresholds are exceeded, the threshold for immediately notifying the user is raised.
+6.  **Default Routing:** System default mappings applied when contextual signals are absent.
+
+---
+
+### Section 11: Technology Stack
 
 The WhatsApp Notification Router implementation is built on the following technologies:
 *   **Language:** Python 3.12
@@ -179,7 +192,7 @@ The WhatsApp Notification Router implementation is built on the following techno
 
 ---
 
-### Section 11: Folder Architecture
+### Section 12: Folder Architecture
 
 The codebase directories are organized under `code/` to isolate modules:
 
@@ -202,7 +215,7 @@ code/
 
 ---
 
-### Section 12: Data Contracts & Object Formalization
+### Section 13: Data Contracts & Object Formalization
 
 The pipeline is strictly typed to prevent validation errors and leakage. The system maps information across typed objects rather than passing raw dictionaries:
 
@@ -231,4 +244,5 @@ Message ──► UnifiedContext ──► FeatureVector ──► Understanding
 *   **Output Generator**
     *   *Input:* `DecisionResult` + `EvidenceResult` + `ConfidenceScore`
     *   *Output:* `OutputRow` (Target schema for output.csv)
+
 

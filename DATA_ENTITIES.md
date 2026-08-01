@@ -12,7 +12,7 @@ This document maps the physical columns of the WhatsApp Notification Router CSV 
     *   `dataset/users.csv`: `user_id`, `do_not_disturb_window`, `messages_opened_30d`, `messages_replied_30d`, `notifications_dismissed_30d`, `messages_reported_30d`.
 *   **Inferred/Derived Attributes:**
     *   Current local time relationship to DND window (Quiet Hours state).
-    *   Historical dismissal ratio: `notifications_dismissed_30d / (messages_opened_30d + messages_replied_30d + 1)`.
+    *   Historical dismissal ratio inferred from user behavior metrics.
 
 #### 2. Message
 *   **Logical Role:** The incoming event to evaluate and route.
@@ -27,8 +27,8 @@ This document maps the physical columns of the WhatsApp Notification Router CSV 
     *   Mapped Relational Fields: `sender_user_id` inside `dataset/messages.csv` and `dataset/message_history.csv`.
     *   Group Relational Fields: `dataset/group_members.csv`: `role` (admin/member), `joined_at`, `messages_sent_30d`, `messages_read_30d`, `replies_sent_30d`.
 *   **Inferred/Derived Attributes:**
-    *   *Contact Saved Status:* Inferred from reciprocal history (e.g. if the recipient user has sent replies to this sender in the past).
-    *   *Sender Trust Index:* Recipient's response rate to this sender's historical messages.
+    *   *Contact Saved Status:* Inferred from reciprocal history logs in the available datasets.
+    *   *Sender Trust Index:* Derived from historical interaction and responsiveness logs between recipient and sender using the available datasets.
 
 #### 4. Group
 *   **Logical Role:** The group conversation container.
@@ -36,16 +36,16 @@ This document maps the physical columns of the WhatsApp Notification Router CSV 
     *   `dataset/groups.csv`: `group_id`, `group_name`, `group_type` (family, work, society, etc.), `member_count`, `admin_count`, `created_at`, `messages_30d`.
     *   `dataset/group_members.csv`: `group_muted_by_user` (mute state).
 *   **Inferred/Derived Attributes:**
-    *   User's active engagement inside the group (ratio of read vs sent replies in this group over 30 days).
+    *   User's active engagement inside the group inferred from member role and read/reply metrics.
 
 #### 5. Business
 *   **Logical Role:** The business account context.
 *   **Physical Columns:**
     *   `dataset/business_accounts.csv`: `business_id`, `display_name`, `brand_name`, `category`, `verified`, `official_domain`, `domain_used_by_sender`, `account_age_days`, `messages_sent_30d`, `user_reports_30d`, `domain_used_by_sender_age_days`.
-    *   `dataset/user_business_history.csv`: `user_id`, `why_user_knows_account`, `last_activity_at`, `allows_promotions`, `promotions_opted_out_at`, `activity_count_180d`, `messages_opened_30d`, `messages_dismissed_30d`, `messages_replied_30d`, `last_reply_at`.
+    *   `dataset/user_business_history.csv`: `user_id`, `business_id`, `why_user_knows_account`, `last_activity_at`, `allows_promotions`, `promotions_opted_out_at`, `activity_count_180d`, `messages_opened_30d`, `messages_dismissed_30d`, `messages_replied_30d`, `last_reply_at`.
 *   **Inferred/Derived Attributes:**
-    *   *Domain Mismatch:* Verification check comparing `official_domain` against `domain_used_by_sender`.
-    *   *Spam Suspect:* If `user_reports_30d` is high or domain age is low relative to sender account age.
+    *   *Domain Mismatch:* Verification check comparing official domains against sender domains.
+    *   *Spam Suspect:* Derived from reports and domain registration ages.
 
 #### 6. Image
 *   **Logical Role:** Multimodal visual input (posters, screenshots).
@@ -80,7 +80,7 @@ This document maps the physical columns of the WhatsApp Notification Router CSV 
 *   **Physical Columns:**
     *   `dataset/daily_notification_summary.csv`: `user_id`, `date`, `notifications_sent`, `notifications_dismissed`.
 *   **Inferred/Derived Attributes:**
-    *   * fatigue levels:* Recent notification count spike (e.g., if notifications received in the last 24h are 3x standard baseline, increase threshold for `notify`).
+    *   *fatigue levels:* Inferred from daily notification summary logs.
 
 ---
 
@@ -235,13 +235,13 @@ This section documents the distinction between features, noting that derived fea
 *   **Account age** (days since business sender profile creation)
 
 #### Derived Features (Need reasoning or aggregation)
-*   **Sender Trust:** recipient interaction rate computed across historical message reply/open counts.
-*   **Spam Risk:** classification of unsolicited promotional message bodies or keywords combined with global user reports.
-*   **Relationship Strength:** contextual closeness calculated from sent-message ratios, replies, and group membership.
-*   **Notification Fatigue:** evaluation of current workload based on recent daily counts of sent and dismissed warnings.
-*   **Promotion Preference:** checks if the user has opted out of marketing content or previously dismissed similar vendor alerts.
-*   **Scam Probability:** detects threats from unknown sources requesting code verifications, bank numbers, or wallet activation.
-*   **User Engagement Score:** recipient's overall historical responsiveness to specific groups or business topics.
+*   **Sender Trust:** Inferred from historical interaction and responsiveness logs between recipient and sender using the available datasets.
+*   **Spam Risk:** Derived from structural noise signals and unsolicited text patterns identified across historical messages and user reports.
+*   **Relationship Strength:** Inferred from contextual closeness, message exchanges, and mutual group participations present in the source logs.
+*   **Notification Fatigue:** Inferred from the user's recent daily counts of notifications sent versus dismissed in history.
+*   **Promotion Preference:** Inferred from the recipient's opt-out settings and history of interaction with similar marketing campaigns.
+*   **Scam Probability:** Inferred from authentication checks, domain usage checks, and textual or visual indicators of risk.
+*   **User Engagement Score:** Inferred from user engagement trends with specific groups or message categories over time.
 
 ---
 
@@ -325,16 +325,34 @@ Below is the comprehensive Feature Dictionary referencing all metrics extracted 
 | Feature | Description | Source Dataset(s) | Type | Used By Module(s) |
 | :--- | :--- | :--- | :--- | :--- |
 | Quiet Hours | DND window preference | `users.csv` | Direct | Decision Engine |
-| Sender Trust | Historical reliability of sender | history + events | Derived | Risk Assessment |
-| Scam Probability | Likelihood of fraud/phishing | message + business | Derived | Safety Layer |
-| Notification Fatigue | Recent interruption load | daily summary | Derived | Decision Engine |
-| Business Trust | Legitimacy of a business sender | `business_accounts.csv`, `user_business_history.csv` | Direct / Derived | Risk Assessment |
-| Relationship Strength | Closeness between sender and recipient | `message_history.csv`, `message_events.csv`, `groups.csv` | Derived | Decision Engine |
-| Urgency | Time-sensitivity of current message | `messages.csv`, `images.csv`, `voice_notes.csv` | Derived | Decision Engine |
-| Promotion Score | Detect marketing/sales/promotional content | `messages.csv`, `images.csv`, `business_accounts.csv` | Derived | Decision Engine |
-| Spam Risk | Identify low-value, unwanted, or repetitive noise | `messages.csv`, `users.csv` | Derived | Risk Assessment |
-| Forward Risk | Mass-forwarded chain content detection | `messages.csv` | Direct / Derived | Decision Engine |
-| Historical Engagement | Measure recipient response on similar past messages | `message_events.csv`, `message_history.csv` | Derived | Decision Engine |
+| Sender Trust | Inferred historical reliability of sender | history + events | Derived | Risk Assessment |
+| Scam Probability | Inferred likelihood of fraud/phishing | message + business | Derived | Safety Layer |
+| Notification Fatigue | Inferred recent interruption load | daily summary | Derived | Decision Engine |
+| Business Trust | Inferred legitimacy of a business sender | `business_accounts.csv`, `user_business_history.csv` | Direct / Derived | Risk Assessment |
+| Relationship Strength | Inferred closeness between sender and recipient | `message_history.csv`, `message_events.csv`, `groups.csv` | Derived | Decision Engine |
+| Urgency | Inferred time-sensitivity of current message | `messages.csv`, `images.csv`, `voice_notes.csv` | Derived | Decision Engine |
+| Promotion Score | Inferred marketing/sales/promotional content | `messages.csv`, `images.csv`, `business_accounts.csv` | Derived | Decision Engine |
+| Spam Risk | Inferred low-value, unwanted, or repetitive noise | `messages.csv`, `users.csv` | Derived | Risk Assessment |
+| Forward Risk | Inferred mass-forwarded chain content | `messages.csv` | Direct / Derived | Decision Engine |
+| Historical Engagement | Inferred recipient response on similar past messages | `message_events.csv`, `message_history.csv` | Derived | Decision Engine |
+
+---
+
+### Entity Ownership
+
+This section defines the hierarchical object relationships for the Context Builder to maintain clean object scope boundaries:
+
+*   **`User` owns:**
+    *   `Notification Preferences`
+    *   `History`
+    *   `Business Preferences`
+    *   `Daily Summary`
+*   **`Message` belongs to:**
+    *   `User`
+    *   `Group`
+    *   `Business`
+    *   `Media`
+
 
 
 
