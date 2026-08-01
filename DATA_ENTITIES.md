@@ -220,5 +220,53 @@ Below is the mapping for every feature extracted by the Feature Extractor, defin
 - *Type:* Direct
 - *Purpose:* Determine whether the notification should interrupt the user immediately based on time-of-day preferences.
 
+---
+
+### Section 5: Direct vs Derived Features
+
+This section documents the distinction between features, noting that derived features represent the core implementation work of the Feature Extractor module.
+
+#### Direct Features (Available directly from the dataset)
+*   **DND window** (recipient user profile parameters)
+*   **Forwarded count** (viral signal from message body metadata)
+*   **Verified business** (business account verification status flag)
+*   **Group muted** (mute flag configured in user-group preferences)
+*   **Message timestamp** (raw timestamp parsed to check quiet hour ranges)
+*   **Account age** (days since business sender profile creation)
+
+#### Derived Features (Need reasoning or aggregation)
+*   **Sender Trust:** recipient interaction rate computed across historical message reply/open counts.
+*   **Spam Risk:** classification of unsolicited promotional message bodies or keywords combined with global user reports.
+*   **Relationship Strength:** contextual closeness calculated from sent-message ratios, replies, and group membership.
+*   **Notification Fatigue:** evaluation of current workload based on recent daily counts of sent and dismissed warnings.
+*   **Promotion Preference:** checks if the user has opted out of marketing content or previously dismissed similar vendor alerts.
+*   **Scam Probability:** detects threats from unknown sources requesting code verifications, bank numbers, or wallet activation.
+*   **User Engagement Score:** recipient's overall historical responsiveness to specific groups or business topics.
+
+---
+
+### Section 6: Evidence Mapping
+
+This section documents exactly what counts as valid evidence to satisfy the `evidence_message_ids` requirement. This dictates what the Evidence Retriever must search for to justify the decisions made by the router:
+
+#### Example 1: Promotion Avoidance
+- *Behavior:* Previous similar promotion ignored
+- *Current Message:* Promotion
+- *Decision:* Mute
+- *Evidence:* Previous promotion IDs
+
+#### Example 2: Urgent Engagement
+- *Behavior:* Previous payment reminder opened
+- *Current Message:* Payment reminder
+- *Decision:* Notify
+- *Evidence:* Previous payment reminder IDs
+
+#### Example 3: Safety Risk
+- *Behavior:* Repeated scam reported
+- *Current Message:* Scam
+- *Decision:* Mute
+- *Evidence:* Reported scam IDs
+
+
 
 

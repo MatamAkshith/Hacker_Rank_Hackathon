@@ -165,8 +165,10 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Phase 3 - Section 2):** Completed Phase 3 - Section 2 (Dataset Relationship Mapping) and appended to `DATA_ENTITIES.md`.
 - **2026-08-01 (Phase 3 - Section 3):** Completed Phase 3 - Section 3 (Module -> Dataset Mapping) and appended to `DATA_ENTITIES.md`.
 - **2026-08-01 (Phase 3 - Section 4):** Completed Phase 3 - Section 4 (Feature Mapping) and appended to `DATA_ENTITIES.md`. Phase 3 is now complete.
+- **2026-08-01 (Phase 3 - Sections 5 & 6):** Completed Phase 3 - Sections 5 & 6 (Direct vs Derived Features and Evidence Mapping) and appended to `DATA_ENTITIES.md`. Phase 3 is officially COMPLETE.
 
 ---
+
 
 
 
