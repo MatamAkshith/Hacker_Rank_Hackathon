@@ -12,6 +12,8 @@ from code.context.models import (
     HistoricalMessage,
     NotificationSummary,
     ContextMetadata,
+    InteractionStatistics,
+    InteractionHistory,
     UnifiedContext
 )
 
@@ -156,6 +158,32 @@ class ContextBuilder:
         except Exception:
             missing_datasets.append("message_history.csv")
 
+        # Construct unified InteractionHistory object
+        interaction_history = None
+        if historical_messages or historical_events:
+            total_msgs = len(historical_messages)
+            total_opened = sum(1 for m in historical_messages if m.message_opened)
+            total_replied = sum(1 for m in historical_messages if m.message_replied)
+            total_dismissed = sum(1 for m in historical_messages if m.notification_dismissed)
+            
+            open_rate = total_opened / total_msgs if total_msgs > 0 else 0.0
+            reply_rate = total_replied / total_msgs if total_msgs > 0 else 0.0
+            dismissal_rate = total_dismissed / total_msgs if total_msgs > 0 else 0.0
+            
+            interaction_history = InteractionHistory(
+                historical_messages=historical_messages,
+                historical_events=historical_events,
+                interaction_statistics=InteractionStatistics(
+                    total_messages=total_msgs,
+                    total_opened=total_opened,
+                    total_replied=total_replied,
+                    total_dismissed=total_dismissed,
+                    open_rate=open_rate,
+                    reply_rate=reply_rate,
+                    dismissal_rate=dismissal_rate
+                )
+            )
+
         # 5. Fetch Daily Notification summary (failsafe)
         notification_summary = None
         try:
@@ -197,7 +225,7 @@ class ContextBuilder:
         # Evaluate ContextMetadata completeness
         has_business_context = business is not None
         has_group_context = group is not None
-        has_historical_evidence = len(historical_messages) > 0
+        has_historical_evidence = historical_messages is not None and len(historical_messages) > 0
         media_needs_processing = media_metadata is not None and media_type in ("image", "voice")
         
         metadata = ContextMetadata(
@@ -216,8 +244,7 @@ class ContextBuilder:
             group=group,
             business=business,
             business_history=business_history,
-            historical_messages=historical_messages,
-            historical_events=historical_events,
+            interaction_history=interaction_history,
             notification_summary=notification_summary,
             media_metadata=media_metadata
         )

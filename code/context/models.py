@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class User(BaseModel):
     user_id: str
@@ -120,6 +120,20 @@ class ContextMetadata(BaseModel):
     media_needs_processing: bool
     missing_datasets: List[str]
 
+class InteractionStatistics(BaseModel):
+    total_messages: int = 0
+    total_opened: int = 0
+    total_replied: int = 0
+    total_dismissed: int = 0
+    open_rate: float = 0.0
+    reply_rate: float = 0.0
+    dismissal_rate: float = 0.0
+
+class InteractionHistory(BaseModel):
+    historical_messages: List[HistoricalMessage] = []
+    historical_events: List[Dict[str, Any]] = []
+    interaction_statistics: InteractionStatistics = Field(default_factory=InteractionStatistics)
+
 class UnifiedContext(BaseModel):
     metadata: ContextMetadata
     message: Message
@@ -128,7 +142,6 @@ class UnifiedContext(BaseModel):
     group: Optional[Group] = None
     business: Optional[Business] = None
     business_history: Optional[BusinessHistory] = None
-    historical_messages: List[HistoricalMessage] = []
-    historical_events: List[Dict[str, Any]] = []
+    interaction_history: Optional[InteractionHistory] = None
     notification_summary: Optional[List[NotificationSummary]] = None
     media_metadata: Optional[MediaSummary] = None

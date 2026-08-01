@@ -47,8 +47,8 @@ def run_tests():
     print(f"  Group: {ctx.group}")
     print(f"  Business: {ctx.business}")
     print(f"  Business History: {ctx.business_history}")
-    print(f"  Message History (count): {len(ctx.historical_messages)}")
-    print(f"  Message Events (count): {len(ctx.historical_events)}")
+    print(f"  Message History (count): {len(ctx.interaction_history.historical_messages) if ctx.interaction_history else 0}")
+    print(f"  Message Events (count): {len(ctx.interaction_history.historical_events) if ctx.interaction_history else 0}")
     print(f"  Notification Summary (count): {len(ctx.notification_summary) if ctx.notification_summary else 0}")
     print(f"  Media Metadata: {ctx.media_metadata}")
 
@@ -98,7 +98,7 @@ def run_tests():
     if minimal_msg_id:
         ctx_min = context_builder.build_context(minimal_msg_id)
         print(f"  [SUCCESS] Built minimal context for message {minimal_msg_id}")
-        print(f"    group={ctx_min.group}, business={ctx_min.business}, media_metadata={ctx_min.media_metadata}, history_count={len(ctx_min.historical_messages)}")
+        print(f"    group={ctx_min.group}, business={ctx_min.business}, media_metadata={ctx_min.media_metadata}, history_count={len(ctx_min.interaction_history.historical_messages) if ctx_min.interaction_history else 0}")
     else:
         print("  [WARNING] Could not find any minimal message sample.")
 

@@ -12,7 +12,9 @@ from code.context.models import (
     User,
     Sender,
     HistoricalMessage,
-    ContextMetadata
+    ContextMetadata,
+    InteractionStatistics,
+    InteractionHistory
 )
 from code.features.extractor import FeatureExtractor
 
@@ -63,12 +65,26 @@ def validate():
         HistoricalMessage(message_id="hist_5", user_id="u_phase2_recipient", conversation_type="group", sender_user_id="u_phase2_sender", created_at="2026-07-24 14:00", message_opened=False, message_replied=False)
     ]
     
+    interaction_history = InteractionHistory(
+        historical_messages=historical_messages,
+        historical_events=[],
+        interaction_statistics=InteractionStatistics(
+            total_messages=5,
+            total_opened=4,
+            total_replied=2,
+            total_dismissed=0,
+            open_rate=0.8,
+            reply_rate=0.4,
+            dismissal_rate=0.0
+        )
+    )
+    
     context = UnifiedContext(
         metadata=metadata,
         message=message,
         user=user,
         sender=sender,
-        historical_messages=historical_messages
+        interaction_history=interaction_history
     )
     
     extractor = FeatureExtractor()

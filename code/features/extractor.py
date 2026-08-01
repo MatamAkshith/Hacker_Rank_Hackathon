@@ -184,12 +184,20 @@ class FeatureExtractor:
             return NotificationFatigueFeature(score=0.0, sent_last_3d=0, dismissed_last_3d=0)
 
     def _extract_historical_engagement(self, context: UnifiedContext) -> HistoricalEngagementFeature:
-        usr = context.user
-        opened_30d = usr.messages_opened_30d if usr.messages_opened_30d is not None else 0
-        replied_30d = usr.messages_replied_30d if usr.messages_replied_30d is not None else 0
-        dismissed_30d = usr.notifications_dismissed_30d if usr.notifications_dismissed_30d is not None else 0
-        
-        total = opened_30d + replied_30d + dismissed_30d
+        history = context.interaction_history
+        if history and history.interaction_statistics and history.interaction_statistics.total_messages > 0:
+            stats = history.interaction_statistics
+            opened_30d = stats.total_opened
+            replied_30d = stats.total_replied
+            dismissed_30d = stats.total_dismissed
+            total = stats.total_messages
+        else:
+            usr = context.user
+            opened_30d = usr.messages_opened_30d if usr.messages_opened_30d is not None else 0
+            replied_30d = usr.messages_replied_30d if usr.messages_replied_30d is not None else 0
+            dismissed_30d = usr.notifications_dismissed_30d if usr.notifications_dismissed_30d is not None else 0
+            total = opened_30d + replied_30d + dismissed_30d
+            
         if total == 0:
             score = 0.5
         else:
@@ -205,7 +213,8 @@ class FeatureExtractor:
 
     def _extract_relationship_strength(self, context: UnifiedContext) -> RelationshipStrengthFeature:
         sender_id = context.message.sender_user_id
-        hist_msgs = context.historical_messages or []
+        history = context.interaction_history
+        hist_msgs = history.historical_messages if history else []
         
         sender_msgs = [m for m in hist_msgs if m.sender_user_id == sender_id] if sender_id else []
         opened_count = sum(1 for m in sender_msgs if m.message_opened)
