@@ -7,14 +7,19 @@ import json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from code.context.models import (
+    Recipient,
     UnifiedContext,
     Message,
-    User,
     Sender,
     HistoricalMessage,
     ContextMetadata,
     InteractionStatistics,
-    InteractionHistory
+    InteractionHistory,
+    Participants,
+    Conversation,
+    BusinessContext,
+    MediaContext,
+    HistoryContext
 )
 from code.features.extractor import FeatureExtractor
 
@@ -39,8 +44,8 @@ def validate():
         forwarded_count=7
     )
     
-    # 3. Create User (opened_30d=10, replied_30d=5, dismissed_30d=5 -> Total=20. Score = (10*0.4 + 5*0.6)/20 = 0.35)
-    user = User(
+    # 3. Create Recipient
+    recipient = Recipient(
         user_id="u_phase2_recipient",
         do_not_disturb_window="23:00-08:00",
         messages_opened_30d=10,
@@ -56,7 +61,6 @@ def validate():
     )
     
     # 5. Create Historical Messages from this sender (5 messages total: 4 opened, 2 replied)
-    # Base ratio = (4*0.4 + 2*0.6)/5 = (1.6 + 1.2)/5 = 2.8/5 = 0.56. Admin bonus = 0.20 -> Final score = 0.76
     historical_messages = [
         HistoricalMessage(message_id="hist_1", user_id="u_phase2_recipient", conversation_type="group", sender_user_id="u_phase2_sender", created_at="2026-07-20 10:00", message_opened=True, message_replied=True),
         HistoricalMessage(message_id="hist_2", user_id="u_phase2_recipient", conversation_type="group", sender_user_id="u_phase2_sender", created_at="2026-07-21 11:00", message_opened=True, message_replied=True),
@@ -80,11 +84,13 @@ def validate():
     )
     
     context = UnifiedContext(
-        metadata=metadata,
-        message=message,
-        user=user,
-        sender=sender,
-        interaction_history=interaction_history
+        recipient=recipient,
+        participants=Participants(sender=sender, group=None),
+        conversation=Conversation(message=message),
+        business=None,
+        media=MediaContext(media_metadata=None),
+        history=HistoryContext(interaction_history=interaction_history, notification_summary=None),
+        metadata=metadata
     )
     
     extractor = FeatureExtractor()

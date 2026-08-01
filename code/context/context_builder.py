@@ -2,6 +2,7 @@
 from typing import Any, Dict, List, Optional
 from code.loader.data_loader import DataLoader
 from code.context.models import (
+    Recipient,
     User,
     Message,
     Sender,
@@ -14,6 +15,11 @@ from code.context.models import (
     ContextMetadata,
     InteractionStatistics,
     InteractionHistory,
+    Participants,
+    Conversation,
+    BusinessContext,
+    MediaContext,
+    HistoryContext,
     UnifiedContext
 )
 
@@ -287,15 +293,26 @@ class ContextBuilder:
             group_muted=group_muted
         )
 
-        return UnifiedContext(
-            metadata=metadata,
-            message=message,
-            user=user,
-            sender=sender,
-            group=group,
-            business=business,
-            business_history=business_history,
+        recipient = Recipient(**(user.dict() if hasattr(user, "dict") else user.model_dump()))
+        participants = Participants(sender=sender, group=group)
+        conversation = Conversation(message=message)
+        
+        business_ctx = None
+        if business is not None or business_history is not None:
+            business_ctx = BusinessContext(profile=business, history=business_history)
+            
+        media_ctx = MediaContext(media_metadata=media_metadata)
+        history_ctx = HistoryContext(
             interaction_history=interaction_history,
-            notification_summary=notification_summary,
-            media_metadata=media_metadata
+            notification_summary=notification_summary
+        )
+
+        return UnifiedContext(
+            recipient=recipient,
+            participants=participants,
+            conversation=conversation,
+            business=business_ctx,
+            media=media_ctx,
+            history=history_ctx,
+            metadata=metadata
         )

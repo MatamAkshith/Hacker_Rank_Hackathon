@@ -1,13 +1,15 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
-class User(BaseModel):
+class Recipient(BaseModel):
     user_id: str
     do_not_disturb_window: Optional[str] = None
     messages_opened_30d: int
     messages_replied_30d: int
     notifications_dismissed_30d: int
     messages_reported_30d: int
+
+User = Recipient
 
 class Message(BaseModel):
     message_id: str
@@ -142,14 +144,29 @@ class InteractionHistory(BaseModel):
     historical_events: List[Dict[str, Any]] = []
     interaction_statistics: InteractionStatistics = Field(default_factory=InteractionStatistics)
 
-class UnifiedContext(BaseModel):
-    metadata: ContextMetadata
-    message: Message
-    user: User
+class Participants(BaseModel):
     sender: Optional[Sender] = None
     group: Optional[Group] = None
-    business: Optional[Business] = None
-    business_history: Optional[BusinessHistory] = None
+
+class Conversation(BaseModel):
+    message: Message
+
+class BusinessContext(BaseModel):
+    profile: Optional[Business] = None
+    history: Optional[BusinessHistory] = None
+
+class MediaContext(BaseModel):
+    media_metadata: Optional[MediaSummary] = None
+
+class HistoryContext(BaseModel):
     interaction_history: Optional[InteractionHistory] = None
     notification_summary: Optional[NotificationSummary] = None
-    media_metadata: Optional[MediaSummary] = None
+
+class UnifiedContext(BaseModel):
+    recipient: Recipient
+    participants: Optional[Participants] = None
+    conversation: Conversation
+    business: Optional[BusinessContext] = None
+    media: Optional[MediaContext] = None
+    history: Optional[HistoryContext] = None
+    metadata: ContextMetadata

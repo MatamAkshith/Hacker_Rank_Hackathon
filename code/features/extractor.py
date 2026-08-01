@@ -89,8 +89,8 @@ class FeatureExtractor:
         )
 
     def _extract_quiet_hours(self, context: UnifiedContext) -> QuietHoursFeature:
-        msg = context.message
-        usr = context.user
+        msg = context.conversation.message
+        usr = context.recipient
         dnd = usr.do_not_disturb_window
         created_at = msg.created_at
         
@@ -123,7 +123,7 @@ class FeatureExtractor:
             return QuietHoursFeature(is_quiet_hours=False, message_time="00:00", dnd_window=dnd)
 
     def _extract_business_trust(self, context: UnifiedContext) -> BusinessTrustFeature:
-        biz = context.business
+        biz = context.business.profile if context.business else None
         if not biz:
             return BusinessTrustFeature(
                 score=0.0,
@@ -158,7 +158,7 @@ class FeatureExtractor:
         )
 
     def _extract_notification_fatigue(self, context: UnifiedContext) -> NotificationFatigueFeature:
-        summary = context.notification_summary
+        summary = context.history.notification_summary if context.history else None
         if not summary:
             return NotificationFatigueFeature(score=0.0, sent_last_3d=0, dismissed_last_3d=0)
             
@@ -169,7 +169,7 @@ class FeatureExtractor:
         )
 
     def _extract_historical_engagement(self, context: UnifiedContext) -> HistoricalEngagementFeature:
-        history = context.interaction_history
+        history = context.history.interaction_history if context.history else None
         if history and history.interaction_statistics and history.interaction_statistics.total_messages > 0:
             stats = history.interaction_statistics
             opened_30d = stats.total_opened
@@ -177,7 +177,7 @@ class FeatureExtractor:
             dismissed_30d = stats.total_dismissed
             total = stats.total_messages
         else:
-            usr = context.user
+            usr = context.recipient
             opened_30d = usr.messages_opened_30d if usr.messages_opened_30d is not None else 0
             replied_30d = usr.messages_replied_30d if usr.messages_replied_30d is not None else 0
             dismissed_30d = usr.notifications_dismissed_30d if usr.notifications_dismissed_30d is not None else 0
@@ -197,8 +197,8 @@ class FeatureExtractor:
         )
 
     def _extract_relationship_strength(self, context: UnifiedContext) -> RelationshipStrengthFeature:
-        sender_id = context.message.sender_user_id
-        history = context.interaction_history
+        sender_id = context.conversation.message.sender_user_id
+        history = context.history.interaction_history if context.history else None
         hist_msgs = history.historical_messages if history else []
         
         sender_msgs = [m for m in hist_msgs if m.sender_user_id == sender_id] if sender_id else []
@@ -206,7 +206,7 @@ class FeatureExtractor:
         replied_count = sum(1 for m in sender_msgs if m.message_replied)
         
         is_admin = False
-        if context.sender and context.sender.role == "admin":
+        if context.participants and context.participants.sender and context.participants.sender.role == "admin":
             is_admin = True
             
         total_msgs = len(sender_msgs)
@@ -226,7 +226,7 @@ class FeatureExtractor:
         )
 
     def _extract_forward_risk(self, context: UnifiedContext) -> ForwardRiskFeature:
-        count = context.message.forwarded_count if context.message.forwarded_count is not None else 0
+        count = context.conversation.message.forwarded_count if context.conversation.message.forwarded_count is not None else 0
         is_high_risk = count >= 5
         return ForwardRiskFeature(
             is_high_risk=is_high_risk,
@@ -234,14 +234,15 @@ class FeatureExtractor:
         )
 
     def _extract_sender_trust(self, context: UnifiedContext) -> SenderTrustFeature:
-        is_group = context.message.conversation_type == "group"
-        if is_group and context.sender:
-            read_count = context.sender.messages_read_30d or 0
-            replies_count = context.sender.replies_sent_30d or 0
+        is_group = context.conversation.message.conversation_type == "group"
+        sender = context.participants.sender if context.participants else None
+        if is_group and sender:
+            read_count = sender.messages_read_30d or 0
+            replies_count = sender.replies_sent_30d or 0
             score = replies_count / (read_count + 1) if read_count >= 0 else 0.0
-        elif context.user:
-            opened = context.user.messages_opened_30d or 0
-            replied = context.user.messages_replied_30d or 0
+        elif context.recipient:
+            opened = context.recipient.messages_opened_30d or 0
+            replied = context.recipient.messages_replied_30d or 0
             score = replied / (opened + 1) if opened >= 0 else 0.0
             read_count = opened
             replies_count = replied
@@ -259,7 +260,7 @@ class FeatureExtractor:
         )
 
     def _extract_urgency(self, context: UnifiedContext) -> UrgencyFeature:
-        text = (context.message.message_text or "").lower()
+        text = (context.conversation.message.message_text or "").lower()
         urgency_keywords = ["urgent", "immediately", "asap", "due by", "expires", "deadline", "action required", "attention required", "important update"]
         matched = [kw for kw in urgency_keywords if kw in text]
         return UrgencyFeature(
@@ -268,13 +269,14 @@ class FeatureExtractor:
         )
 
     def _extract_promotion(self, context: UnifiedContext) -> PromotionFeature:
-        text = (context.message.message_text or "").lower()
+        text = (context.conversation.message.message_text or "").lower()
         promo_keywords = ["sale", "discount", "off", "coupon", "promo", "deal", "limited time", "buy now", "free shipping", "cashback", "offer", "save"]
         matched_promo = [kw for kw in promo_keywords if kw in text]
         
         is_retail = False
-        if context.business and context.business.category:
-            cat = context.business.category.lower()
+        biz = context.business.profile if context.business else None
+        if biz and biz.category:
+            cat = biz.category.lower()
             is_retail = any(c in cat for c in ["shopping", "retail", "e-commerce", "marketing", "store"])
             
         kw_score = min(len(matched_promo) * 0.35, 0.7)
@@ -289,12 +291,13 @@ class FeatureExtractor:
 
     def _extract_spam_risk(self, context: UnifiedContext) -> SpamRiskFeature:
         user_reported = 0
-        if context.business and context.business.user_reports_30d is not None:
-            user_reported = context.business.user_reports_30d
-        elif context.user and context.user.messages_reported_30d is not None:
-            user_reported = context.user.messages_reported_30d
+        biz = context.business.profile if context.business else None
+        if biz and biz.user_reports_30d is not None:
+            user_reported = biz.user_reports_30d
+        elif context.recipient and context.recipient.messages_reported_30d is not None:
+            user_reported = context.recipient.messages_reported_30d
             
-        forwarded_count = context.message.forwarded_count if context.message.forwarded_count is not None else 0
+        forwarded_count = context.conversation.message.forwarded_count if context.conversation.message.forwarded_count is not None else 0
         
         report_score = min(user_reported / 10.0, 0.6)
         fwd_score = 0.4 if forwarded_count >= 5 else (0.2 if forwarded_count > 0 else 0.0)
@@ -307,14 +310,15 @@ class FeatureExtractor:
         )
 
     def _extract_scam_risk(self, context: UnifiedContext) -> ScamRiskFeature:
-        text = (context.message.message_text or "").lower()
+        text = (context.conversation.message.message_text or "").lower()
         scam_keywords = ["otp", "login code", "verify pin", "pay reattempt fee", "release package", "scan qr", "bank account blocked", "urgent action required", "winner", "lottery", "claim reward", "transfer money"]
         matched_scam = [kw for kw in scam_keywords if kw in text]
         
-        verified_business = bool(context.business and context.business.verified)
+        biz = context.business.profile if context.business else None
+        verified_business = bool(biz and biz.verified)
         
         scam_kw_score = min(len(matched_scam) * 0.4, 0.8)
-        unverified_penalty = 0.2 if (context.business and not verified_business) or (not context.business and matched_scam) else 0.0
+        unverified_penalty = 0.2 if (biz and not verified_business) or (not biz and matched_scam) else 0.0
         
         raw_score = min(1.0, scam_kw_score + unverified_penalty)
         if verified_business:

@@ -41,16 +41,16 @@ def run_tests():
     ctx = context_builder.build_context(first_msg_id)
     print(f"UnifiedContext populated:")
     print(f"  Metadata: {ctx.metadata}")
-    print(f"  Message: {ctx.message}")
-    print(f"  User: {ctx.user}")
-    print(f"  Sender: {ctx.sender}")
-    print(f"  Group: {ctx.group}")
-    print(f"  Business: {ctx.business}")
-    print(f"  Business History: {ctx.business_history}")
-    print(f"  Message History (count): {len(ctx.interaction_history.historical_messages) if ctx.interaction_history else 0}")
-    print(f"  Message Events (count): {len(ctx.interaction_history.historical_events) if ctx.interaction_history else 0}")
-    print(f"  Notification Summary: {ctx.notification_summary}")
-    print(f"  Media Metadata: {ctx.media_metadata}")
+    print(f"  Message: {ctx.conversation.message}")
+    print(f"  User: {ctx.recipient}")
+    print(f"  Sender: {ctx.participants.sender if ctx.participants else None}")
+    print(f"  Group: {ctx.participants.group if ctx.participants else None}")
+    print(f"  Business: {ctx.business.profile if ctx.business else None}")
+    print(f"  Business History: {ctx.business.history if ctx.business else None}")
+    print(f"  Message History (count): {len(ctx.history.interaction_history.historical_messages) if ctx.history and ctx.history.interaction_history else 0}")
+    print(f"  Message Events (count): {len(ctx.history.interaction_history.historical_events) if ctx.history and ctx.history.interaction_history else 0}")
+    print(f"  Notification Summary: {ctx.history.notification_summary if ctx.history else None}")
+    print(f"  Media Metadata: {ctx.media.media_metadata if ctx.media else None}")
 
     print("\n=== Step 6: Build Context for different Conversation Types ===")
     conversation_types = ["personal", "group", "business"]
@@ -69,7 +69,7 @@ def run_tests():
         if not sample_rows.empty:
             msg_id = sample_rows.iloc[0]["message_id"]
             ctx_media = context_builder.build_context(msg_id)
-            media_path = ctx_media.media_metadata.file_path if ctx_media.media_metadata else None
+            media_path = ctx_media.media.media_metadata.file_path if ctx_media.media and ctx_media.media.media_metadata else None
             print(f"  [SUCCESS] Built media context for '{m_type}' message {msg_id}. Path: {media_path}")
         else:
             print(f"  [WARNING] No message found with media_type == '{m_type}'")
@@ -98,7 +98,7 @@ def run_tests():
     if minimal_msg_id:
         ctx_min = context_builder.build_context(minimal_msg_id)
         print(f"  [SUCCESS] Built minimal context for message {minimal_msg_id}")
-        print(f"    group={ctx_min.group}, business={ctx_min.business}, media_metadata={ctx_min.media_metadata}, history_count={len(ctx_min.interaction_history.historical_messages) if ctx_min.interaction_history else 0}")
+        print(f"    group={ctx_min.participants.group if ctx_min.participants else None}, business={ctx_min.business}, media_metadata={ctx_min.media.media_metadata if ctx_min.media else None}, history_count={len(ctx_min.history.interaction_history.historical_messages) if ctx_min.history and ctx_min.history.interaction_history else 0}")
     else:
         print("  [WARNING] Could not find any minimal message sample.")
 

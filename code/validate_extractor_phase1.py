@@ -7,10 +7,15 @@ import json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from code.context.models import (
+    Recipient,
     UnifiedContext,
     Message,
-    User,
     Business,
+    BusinessContext,
+    Participants,
+    Conversation,
+    HistoryContext,
+    MediaContext,
     NotificationSummary,
     ContextMetadata
 )
@@ -26,7 +31,7 @@ def validate():
         missing_datasets=[]
     )
     
-    # 2. Create a mocked Message
+    # 2. Create a mocked Message (Quiet Hours test: created at 22:19)
     message = Message(
         message_id="msg_mock_001",
         user_id="u_mock_001",
@@ -36,8 +41,8 @@ def validate():
         forwarded_count=0
     )
     
-    # 3. Create a mocked User (Quiet Hours test: time 22:19 is OUTSIDE 23:00-08:00 DND)
-    user = User(
+    # 3. Create a mocked Recipient (Quiet Hours DND window)
+    recipient = Recipient(
         user_id="u_mock_001",
         do_not_disturb_window="23:00-08:00",
         messages_opened_30d=10,
@@ -46,9 +51,7 @@ def validate():
         messages_reported_30d=0
     )
     
-    # 4. Create a mocked Business (Business Trust calculation:
-    # verified=True, domain_match=True (official == sender), age=937 days, reports=3.
-    # Score formula: 1.0*0.4 + 1.0*0.3 + min(937/365, 1.0)*0.2 - min(3/10, 1.0)*0.1 = 0.4 + 0.3 + 0.2 - 0.03 = 0.87)
+    # 4. Create a mocked Business
     business = Business(
         business_id="business_mock_001",
         display_name="Mock Business",
@@ -59,8 +62,7 @@ def validate():
         user_reports_30d=3
     )
     
-    # 5. Create a mocked NotificationSummary (Notification Fatigue test:
-    # sent: 1+2=3, dismissed: 0+1=1. Score: 1/3 = 0.3333333333333333)
+    # 5. Create a mocked NotificationSummary
     notification_summary = NotificationSummary(
         fatigue_score=0.3333333333333333,
         avg_notifications=1.5,
@@ -70,13 +72,15 @@ def validate():
         dismissed_last_3d=1
     )
     
-    # 6. Instantiate UnifiedContext
+    # 6. Instantiate UnifiedContext using the domain objects
     context = UnifiedContext(
-        metadata=metadata,
-        message=message,
-        user=user,
-        business=business,
-        notification_summary=notification_summary
+        recipient=recipient,
+        participants=Participants(sender=None, group=None),
+        conversation=Conversation(message=message),
+        business=BusinessContext(profile=business, history=None),
+        media=MediaContext(media_metadata=None),
+        history=HistoryContext(interaction_history=None, notification_summary=notification_summary),
+        metadata=metadata
     )
     
     # 7. Extract FeatureVector
