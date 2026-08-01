@@ -36,18 +36,21 @@ class FeatureExtractor:
         # 3. Notification Fatigue (BehaviourFeatures)
         fatigue_feat = self._extract_notification_fatigue(context)
         
-        # 4. Default fallbacks for the rest of features to satisfy schema validation
+        # 4. Historical Engagement (BehaviourFeatures)
+        engagement_feat = self._extract_historical_engagement(context)
+        
+        # 5. Relationship Strength (TrustFeatures)
+        rel_strength_feat = self._extract_relationship_strength(context)
+        
+        # 6. Forward Risk (RiskFeatures)
+        forward_risk_feat = self._extract_forward_risk(context)
+        
+        # Default fallbacks for remaining un-implemented features to satisfy schema validation
         sender_trust_feat = SenderTrustFeature(
             score=0.0,
             messages_read=0,
             replies_sent=0,
             is_group=False
-        )
-        relationship_strength_feat = RelationshipStrengthFeature(
-            score=0.0,
-            opened_count=0,
-            replied_count=0,
-            is_admin=False
         )
         urgency_feat = UrgencyFeature(
             is_urgent=False,
@@ -68,22 +71,12 @@ class FeatureExtractor:
             matched_scam_keywords=[],
             verified_business=False
         )
-        forward_risk_feat = ForwardRiskFeature(
-            is_high_risk=False,
-            forwarded_count=0
-        )
-        historical_engagement_feat = HistoricalEngagementFeature(
-            score=0.0,
-            opened_30d=0,
-            dismissed_30d=0,
-            replied_30d=0
-        )
         
         # Assemble nested structures
         trust = TrustFeatures(
             sender_trust=sender_trust_feat,
             business_trust=business_trust_feat,
-            relationship_strength=relationship_strength_feat
+            relationship_strength=rel_strength_feat
         )
         urgency = UrgencyFeatures(
             urgency=urgency_feat,
@@ -95,7 +88,7 @@ class FeatureExtractor:
             forward_risk=forward_risk_feat
         )
         behaviour = BehaviourFeatures(
-            historical_engagement=historical_engagement_feat,
+            historical_engagement=engagement_feat,
             notification_fatigue=fatigue_feat,
             quiet_hours=quiet_hours_feat
         )
@@ -117,10 +110,8 @@ class FeatureExtractor:
             return QuietHoursFeature(is_quiet_hours=False, message_time="00:00")
             
         try:
-            # Parse message time (supporting "YYYY-MM-DD HH:MM:SS" or just "HH:MM")
             parts = created_at.split()
             time_str = parts[-1] if parts else "00:00"
-            # Keep only HH:MM if seconds are present
             time_parts = time_str.split(":")
             hh_mm_str = ":".join(time_parts[:2])
             
@@ -184,7 +175,6 @@ class FeatureExtractor:
             return NotificationFatigueFeature(score=0.0, sent_last_3d=0, dismissed_last_3d=0)
             
         try:
-            # Sort by date descending to get most recent summaries
             sorted_summary = sorted(summary, key=lambda x: x.date, reverse=True)
             recent_3 = sorted_summary[:3]
             
@@ -204,3 +194,59 @@ class FeatureExtractor:
             )
         except Exception:
             return NotificationFatigueFeature(score=0.0, sent_last_3d=0, dismissed_last_3d=0)
+
+    def _extract_historical_engagement(self, context: UnifiedContext) -> HistoricalEngagementFeature:
+        usr = context.user
+        opened_30d = usr.messages_opened_30d if usr.messages_opened_30d is not None else 0
+        replied_30d = usr.messages_replied_30d if usr.messages_replied_30d is not None else 0
+        dismissed_30d = usr.notifications_dismissed_30d if usr.notifications_dismissed_30d is not None else 0
+        
+        total = opened_30d + replied_30d + dismissed_30d
+        if total == 0:
+            score = 0.5  # Cold start neutral fallback
+        else:
+            score = (opened_30d * 0.4 + replied_30d * 0.6) / total
+            
+        score = max(0.0, min(1.0, score))
+        return HistoricalEngagementFeature(
+            score=score,
+            opened_30d=opened_30d,
+            dismissed_30d=dismissed_30d,
+            replied_30d=replied_30d
+        )
+
+    def _extract_relationship_strength(self, context: UnifiedContext) -> RelationshipStrengthFeature:
+        sender_id = context.message.sender_user_id
+        hist_msgs = context.historical_messages or []
+        
+        sender_msgs = [m for m in hist_msgs if m.sender_user_id == sender_id] if sender_id else []
+        opened_count = sum(1 for m in sender_msgs if m.message_opened)
+        replied_count = sum(1 for m in sender_msgs if m.message_replied)
+        
+        is_admin = False
+        if context.sender and context.sender.role == "admin":
+            is_admin = True
+            
+        total_msgs = len(sender_msgs)
+        if total_msgs == 0:
+            score = 0.2 if is_admin else 0.0
+        else:
+            base_ratio = (opened_count * 0.4 + replied_count * 0.6) / total_msgs
+            admin_bonus = 0.2 if is_admin else 0.0
+            score = min(1.0, base_ratio + admin_bonus)
+            
+        score = max(0.0, min(1.0, score))
+        return RelationshipStrengthFeature(
+            score=score,
+            opened_count=opened_count,
+            replied_count=replied_count,
+            is_admin=is_admin
+        )
+
+    def _extract_forward_risk(self, context: UnifiedContext) -> ForwardRiskFeature:
+        count = context.message.forwarded_count if context.message.forwarded_count is not None else 0
+        is_high_risk = count >= 5
+        return ForwardRiskFeature(
+            is_high_risk=is_high_risk,
+            forwarded_count=count
+        )
