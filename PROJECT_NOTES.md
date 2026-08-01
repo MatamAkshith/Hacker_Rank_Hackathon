@@ -171,7 +171,12 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Documentation Phase Frozen):** Finalized caching, deterministic LLM settings, and JSON schemas. Removed all raw test dataset references.
   **DOCUMENTATION PHASE FROZEN. Moving strictly to data validation and Python implementation.**
 
+## Sprint 1
+
+- **2026-08-01 (Sprint 1 - Task 1):** Task 1 (Project Structure): Created foundational `code/` directory, including loader, context, and utils modules. No reasoning modules added yet.
+
 ---
+
 
 
 
