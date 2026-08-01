@@ -81,3 +81,47 @@ This document maps the physical columns of the WhatsApp Notification Router CSV 
     *   `dataset/daily_notification_summary.csv`: `user_id`, `date`, `notifications_sent`, `notifications_dismissed`.
 *   **Inferred/Derived Attributes:**
     *   * fatigue levels:* Recent notification count spike (e.g., if notifications received in the last 24h are 3x standard baseline, increase threshold for `notify`).
+
+---
+
+### Dataset Relationship Mapping
+
+Below is the entity relationship diagram detailing foreign key links across dataset files:
+
+```text
+messages.csv
+│
+├── user_id ─────────────► users.csv
+│
+├── sender_user_id ──────► users.csv
+│
+├── group_id ────────────► groups.csv
+│                           │
+│                           └────► group_members.csv
+│
+├── business_id ─────────► business_accounts.csv
+│                           │
+│                           └────► user_business_history.csv
+│
+├── media_id
+│      │
+│      ├────► images.csv
+│      └────► voice_notes.csv
+│
+└────────────────────────► message_history.csv
+                              │
+                              └────► message_events.csv
+```
+
+#### Detailed Link Specifications
+
+1.  **Recipient User Link:** `messages.csv.user_id` ──► `users.csv.user_id`. Resolves receiving user parameters (quiet hours DND window, notification affinity ratios).
+2.  **Sender User Link:** `messages.csv.sender_user_id` ──► `users.csv.user_id` (if the sender is another WhatsApp user in personal/group threads).
+3.  **Group Chat Context Link:** `messages.csv.group_id` ──► `groups.csv.group_id` mapping to `group_members.csv.group_id` (relational query using both `group_id` and `user_id` to evaluate member roles, participation rates, and mute settings).
+4.  **Business Chat Context Link:** `messages.csv.business_id` ──► `business_accounts.csv.business_id` mapping to `user_business_history.csv.business_id` (evaluated with recipient `user_id` to check opt-outs and recent orders).
+5.  **Multimodal Media Links:** `messages.csv.media_id` points to:
+    *   `images.csv.image_id` if `media_type == "image"`.
+    *   `voice_notes.csv.voice_note_id` if `media_type == "voice"`.
+    These resolve local file locations under `dataset/media/`.
+6.  **Historical Trace Mapping:** Message context from incoming files is contextualized by scanning `message_history.csv` for matching `user_id` + `sender_user_id`/`group_id`/`business_id` nodes. Individual engagement results are queried from `message_events.csv` using the historical `message_id`.
+
