@@ -189,6 +189,7 @@ The WhatsApp Notification Router implementation is built on the following techno
 *   **Audio Processing:** Whisper / Gemini Audio
 *   **Configuration Management:** `python-dotenv`
 *   **Evaluation:** `scikit-learn` (optional, for metric calculation)
+*   **Execution Rules:** All LLM calls must be executed with `temperature=0.0` and structured JSON output mode enabled to guarantee deterministic, parseable reasoning.
 
 ---
 
@@ -200,6 +201,7 @@ The codebase directories are organized under `code/` to isolate modules:
 code/
 ├── main.py                 # Pipeline orchestrator
 ├── config.py               # Environment and LLM configurations
+├── cache/                  # Stores API responses, transcribed audio, and extracted multimodal features to speed up iterative testing and prevent redundant API calls
 ├── loader/                 # Dataset and media ingestion
 ├── context/                # Context Builder module
 ├── media/                  # Media Processor (Vision/Audio/OCR)
@@ -235,12 +237,40 @@ Message ──► UnifiedContext ──► FeatureVector ──► Understanding
 *   **Decomposed Decision Engine - Stage 1 (Understanding)**
     *   *Input:* `FeatureVector`
     *   *Output:* `UnderstandingResult`
+    *   *JSON Schema:*
+        ```json
+        {
+          "message_type": "string",
+          "summary": "string",
+          "urgency_score": "integer",
+          "intent": "string"
+        }
+        ```
 *   **Decomposed Decision Engine - Stage 2 (Risk)**
     *   *Input:* `UnderstandingResult` + `FeatureVector`
     *   *Output:* `RiskAssessment`
+    *   *JSON Schema:*
+        ```json
+        {
+          "spam_probability": "float",
+          "scam_indicators": ["string"],
+          "sender_trust_score": "integer",
+          "business_trust_score": "integer",
+          "safety_flags": ["string"],
+          "override_mute": "boolean"
+        }
+        ```
 *   **Decomposed Decision Engine - Stage 3 (Notification)**
     *   *Input:* `RiskAssessment` + `UnderstandingResult`
     *   *Output:* `DecisionResult`
+    *   *JSON Schema:*
+        ```json
+        {
+          "action": "notify|digest|mute",
+          "reason": "string",
+          "confidence_level": "string"
+        }
+        ```
 *   **Output Generator**
     *   *Input:* `DecisionResult` + `EvidenceResult` + `ConfidenceScore`
     *   *Output:* `OutputRow` (Target schema for output.csv)

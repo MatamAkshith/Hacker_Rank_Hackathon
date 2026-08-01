@@ -63,7 +63,7 @@ Incoming Message -> Data Loader -> Context Builder -> Media Understanding -> Fea
 ```
 
 #### Module Architecture and Key Components
-1. **Data Loader:** Reads and validates all dataset files (`messages.csv`, `dataset/test.csv`, and media directories).
+1. **Data Loader:** Reads and validates all dataset files (`messages.csv` or other raw input datasets, and media directories).
 2. **Context Builder:** Builds a unified context combining user profile, sender/group/business details, history, and stats.
 3. **Media Processor:** Resolves visual/audio inputs into a unified semantic/textual representation.
 4. **Feature Extractor:** Computes structured reasoning signals (Sender/Business Trust, Urgency, Promotion, Spam, Relationship Strength, Fatigue, Quiet Hours, Scam).
@@ -168,8 +168,11 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Phase 3 - Sections 5 & 6):** Completed Phase 3 - Sections 5 & 6 (Direct vs Derived Features and Evidence Mapping) and appended to `DATA_ENTITIES.md`. Phase 3 is officially COMPLETE.
 - **2026-08-01 (Phase 3 Finalization):** Fully finalized Phase 3 (Pipeline & Feature Extraction Setup), adding Personalization Signals, Safety Signals, the Implementation Priority Matrix, and the Feature Dictionary to `DATA_ENTITIES.md`.
 - **2026-08-01 (Documentation Refinement):** Applied structural refinements (Entity Ownership, Priority Order, Confidence Levels, and tech abstraction) to `ARCHITECTURE.md` and `DATA_ENTITIES.md`. Note that the next phase is strictly dataset-driven validation (no implementation docs until CSVs are verified).
+- **2026-08-01 (Documentation Phase Frozen):** Finalized caching, deterministic LLM settings, and JSON schemas. Removed all raw test dataset references.
+  **DOCUMENTATION PHASE FROZEN. Moving strictly to data validation and Python implementation.**
 
 ---
+
 
 
 

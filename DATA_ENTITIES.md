@@ -17,7 +17,7 @@ This document maps the physical columns of the WhatsApp Notification Router CSV 
 #### 2. Message
 *   **Logical Role:** The incoming event to evaluate and route.
 *   **Physical Columns:**
-    *   `dataset/messages.csv` (The target dataset; note that `dataset/test.csv` is not present in the workspace): `message_id`, `user_id`, `conversation_type`, `group_id`, `business_id`, `sender_user_id`, `created_at`, `message_text`, `media_type`, `media_id`, `forwarded_count`.
+    *   `dataset/messages.csv` (the raw input dataset): `message_id`, `user_id`, `conversation_type`, `group_id`, `business_id`, `sender_user_id`, `created_at`, `message_text`, `media_type`, `media_id`, `forwarded_count`.
 *   **Inferred/Derived Attributes:**
     *   Core semantic intent, message category, text urgency keywords, and potential instruction overrides (scam/phishing checks).
 
