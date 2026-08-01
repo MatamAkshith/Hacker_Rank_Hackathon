@@ -267,6 +267,76 @@ This section documents exactly what counts as valid evidence to satisfy the `evi
 - *Decision:* Mute
 - *Evidence:* Reported scam IDs
 
+---
+
+### Section 7: Personalization Signals
+
+Below is the list of fields and behavioral dimensions that influence the personalization layers:
+*   **Messages opened:** Recipient's history of opening notifications from this sender/group.
+*   **Replies:** User replies to historical messages indicating direct relationship.
+*   **Dismissals:** Dismissed notification counts indicating lower relevance.
+*   **Reports:** User reported spam/scam logs indicating explicit muting preference.
+*   **Promotion opt-out:** Timestamps of promotional opt-outs from specific businesses.
+*   **Group mute status:** Muted state flags from member mappings.
+*   **Relationship history:** Type and frequency of historical interactions.
+*   **Activity count:** Interaction metrics over 180 days.
+*   **Daily notification load:** Measures the volume of recent interruptions.
+
+---
+
+### Section 8: Safety Signals
+
+Below is the list of fields and threat dimensions that contribute to the Safety Layer evaluation:
+*   **Business verification:** Checked status of the business account.
+*   **Domain mismatch:** Unofficial domain mismatch check.
+*   **User reports:** Sum of user reports for a business or contact in the past 30 days.
+*   **Forwarded count:** Measures potential viral spam threat.
+*   **Unknown sender:** Sender not present in conversation/relationship history.
+*   **OTP requests:** Text checking for "OTP", "login code", "verification pin".
+*   **QR/payment requests:** Checks for transaction links, "pay small fee", "scan QR".
+*   **Phishing language:** Urgency phrases pushing for credentials.
+*   **Scam keywords:** Fraud alert filters (e.g. account reactivation, expiration warning).
+
+---
+
+### Section 9: Implementation Priority Matrix
+
+Below is the roadmap and priority order for implementing modules:
+
+| Priority | Module | Depends On |
+| :--- | :--- | :--- |
+| 1 | Data Loader | None |
+| 2 | Context Builder | Loader |
+| 3 | Media Processor | Loader |
+| 4 | Feature Extractor | Context + Media |
+| 5 | Understanding Engine | Features |
+| 6 | Risk Assessment | Understanding |
+| 7 | Notification Decision | Risk |
+| 8 | Evidence Retriever | Decision |
+| 9 | Confidence Estimator | Decision + Evidence |
+| 10 | Output Generator | Everything |
+
+---
+
+### Feature Dictionary
+
+Below is the comprehensive Feature Dictionary referencing all metrics extracted from raw datasets:
+
+| Feature | Description | Source Dataset(s) | Type | Used By Module(s) |
+| :--- | :--- | :--- | :--- | :--- |
+| Quiet Hours | DND window preference | `users.csv` | Direct | Decision Engine |
+| Sender Trust | Historical reliability of sender | history + events | Derived | Risk Assessment |
+| Scam Probability | Likelihood of fraud/phishing | message + business | Derived | Safety Layer |
+| Notification Fatigue | Recent interruption load | daily summary | Derived | Decision Engine |
+| Business Trust | Legitimacy of a business sender | `business_accounts.csv`, `user_business_history.csv` | Direct / Derived | Risk Assessment |
+| Relationship Strength | Closeness between sender and recipient | `message_history.csv`, `message_events.csv`, `groups.csv` | Derived | Decision Engine |
+| Urgency | Time-sensitivity of current message | `messages.csv`, `images.csv`, `voice_notes.csv` | Derived | Decision Engine |
+| Promotion Score | Detect marketing/sales/promotional content | `messages.csv`, `images.csv`, `business_accounts.csv` | Derived | Decision Engine |
+| Spam Risk | Identify low-value, unwanted, or repetitive noise | `messages.csv`, `users.csv` | Derived | Risk Assessment |
+| Forward Risk | Mass-forwarded chain content detection | `messages.csv` | Direct / Derived | Decision Engine |
+| Historical Engagement | Measure recipient response on similar past messages | `message_events.csv`, `message_history.csv` | Derived | Decision Engine |
+
+
 
 
 
