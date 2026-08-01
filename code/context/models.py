@@ -100,7 +100,15 @@ class NotificationSummary(BaseModel):
     notifications_sent: int
     notifications_dismissed: int
 
+class ContextMetadata(BaseModel):
+    has_business_context: bool
+    has_group_context: bool
+    has_historical_evidence: bool
+    media_needs_processing: bool
+    missing_datasets: List[str]
+
 class UnifiedContext(BaseModel):
+    metadata: ContextMetadata
     message: Message
     user: User
     sender: Optional[Sender] = None
