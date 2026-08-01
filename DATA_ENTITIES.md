@@ -125,3 +125,38 @@ messages.csv
     These resolve local file locations under `dataset/media/`.
 6.  **Historical Trace Mapping:** Message context from incoming files is contextualized by scanning `message_history.csv` for matching `user_id` + `sender_user_id`/`group_id`/`business_id` nodes. Individual engagement results are queried from `message_events.csv` using the historical `message_id`.
 
+---
+
+### Module to Dataset Mapping
+
+Below is the mapping detailing exactly which datasets are consumed and produced by each system component:
+
+#### 1. Data Loader
+*   **Consumes:** Every CSV file under `dataset/`
+*   **Produces:** Validated DataFrames
+
+#### 2. Context Builder
+*   **Consumes:** `messages.csv`, `users.csv`, `groups.csv`, `group_members.csv`, `business_accounts.csv`, `user_business_history.csv`, `message_history.csv`, `message_events.csv`, `daily_notification_summary.csv`
+*   **Produces:** `UnifiedContext`
+
+#### 3. Media Processor
+*   **Consumes:** `images.csv`, `voice_notes.csv`, `media/` directory
+*   **Produces:** `MediaSummary`
+
+#### 4. Feature Extractor
+*   **Consumes:** `UnifiedContext`
+*   **Produces:** `FeatureVector`
+
+#### 5. Decision Engine
+*   **Consumes:** `FeatureVector`
+*   **Produces:** `DecisionResult`
+
+#### 6. Evidence Retriever
+*   **Consumes:** `message_history.csv`, `message_events.csv`
+*   **Produces:** `evidence_message_ids`
+
+#### 7. Output Generator
+*   **Consumes:** `DecisionResult`
+*   **Produces:** `output.csv`
+
+
