@@ -1,5 +1,4 @@
-"""Pydantic model definitions for system data objects."""
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 class User(BaseModel):
@@ -102,11 +101,13 @@ class NotificationSummary(BaseModel):
     notifications_dismissed: int
 
 class UnifiedContext(BaseModel):
-    user: User
     message: Message
+    user: User
     sender: Optional[Sender] = None
     group: Optional[Group] = None
     business: Optional[Business] = None
-    media: Optional[MediaSummary] = None
-    history: List[HistoricalMessage] = []
-    daily_summary: List[NotificationSummary] = []
+    business_history: Optional[List[Dict[str, Any]]] = None
+    historical_messages: List[HistoricalMessage] = []
+    historical_events: List[Dict[str, Any]] = []
+    notification_summary: Optional[List[NotificationSummary]] = None
+    media_metadata: Optional[MediaSummary] = None
