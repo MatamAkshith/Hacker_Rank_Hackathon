@@ -174,6 +174,7 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 ## Sprint 1
 
 - **2026-08-01 (Sprint 1 - Task 1):** Task 1 (Project Structure): Created foundational `code/` directory, including loader, context, and utils modules. No reasoning modules added yet.
+- **2026-08-01 (Sprint 1 - Task 2):** Task 2 (Object Models): Created strict typed data models in `models.py` (`Message`, `User`, `Group`, `Business`, `MediaSummary`, `HistoricalMessage`, `NotificationSummary`, `UnifiedContext`) to enforce data contracts and prevent raw DataFrames from entering reasoning layers.
 
 ---
 
