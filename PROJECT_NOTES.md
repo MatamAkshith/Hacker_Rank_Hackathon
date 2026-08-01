@@ -190,6 +190,7 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Sprint 2 - BusinessHistory Refactor):** Defined `BusinessHistory` model in `models.py` and updated `UnifiedContext` field to `Optional[BusinessHistory]` (single object) to match the database's unique mapping. Refactored `ContextBuilder` construction and verified downstream compatibility.
 - **2026-08-01 (Sprint 2 - InteractionHistory Refactor):** Consolidated historical messages, historical events, and computed interaction statistics into a single `InteractionHistory` Pydantic model. Updated `ContextBuilder`, `FeatureExtractor`, and validation scripts to construct and consume this unified history object.
 - **2026-08-01 (Sprint 2 - NotificationSummary Refactor):** Redefined `NotificationSummary` schema to pre-aggregate fatigue score, daily averages, recent trend trajectory, and recent volumes. Refactored `ContextBuilder` daily calculations, simplified `FeatureExtractor` fatigue query logic, and verified test scenarios.
+- **2026-08-01 (Sprint 2 - ContextMetadata Expansion):** Expanded `ContextMetadata` schema in `models.py` with six routing indicator flags: `has_media`, `needs_ocr`, `needs_asr`, `history_depth`, `business_known`, and `group_muted`. Updated `ContextBuilder` to calculate and populate these indicators natively.
 
 ---
 

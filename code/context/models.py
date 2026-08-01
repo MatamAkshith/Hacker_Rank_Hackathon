@@ -121,6 +121,12 @@ class ContextMetadata(BaseModel):
     has_historical_evidence: bool
     media_needs_processing: bool
     missing_datasets: List[str]
+    has_media: bool = False
+    needs_ocr: bool = False
+    needs_asr: bool = False
+    history_depth: int = 0
+    business_known: bool = False
+    group_muted: bool = False
 
 class InteractionStatistics(BaseModel):
     total_messages: int = 0

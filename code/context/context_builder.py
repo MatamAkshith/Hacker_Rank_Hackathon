@@ -266,12 +266,25 @@ class ContextBuilder:
         has_historical_evidence = historical_messages is not None and len(historical_messages) > 0
         media_needs_processing = media_metadata is not None and media_type in ("image", "voice")
         
+        has_media = bool(media_type)
+        needs_ocr = media_type == "image"
+        needs_asr = media_type == "voice"
+        history_depth = len(historical_messages) if historical_messages else 0
+        business_known = business_history is not None
+        group_muted = bool(group.group_muted_by_user) if group is not None else False
+        
         metadata = ContextMetadata(
             has_business_context=has_business_context,
             has_group_context=has_group_context,
             has_historical_evidence=has_historical_evidence,
             media_needs_processing=media_needs_processing,
-            missing_datasets=missing_datasets
+            missing_datasets=missing_datasets,
+            has_media=has_media,
+            needs_ocr=needs_ocr,
+            needs_asr=needs_asr,
+            history_depth=history_depth,
+            business_known=business_known,
+            group_muted=group_muted
         )
 
         return UnifiedContext(
