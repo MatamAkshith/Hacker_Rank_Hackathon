@@ -144,8 +144,8 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 | :--- | :--- | :--- | :--- |
 | **Phase 1** | Problem Analysis & Workspace Initialization | Created `PROJECT_NOTES.md`, executed repository inventory audit, analyzed schemas, performed DND & data distributions checks. | **COMPLETE** |
 | **Phase 2** | System Architecture and Modular Design Specification | Created `ARCHITECTURE.md` with complete 6-section spec (Loader, Builder, Processor, Extractor, Engine, Retriever, Estimator, Generator). | **COMPLETE** |
-| **Phase 3** | Pipeline & Feature Extraction Setup | Implement rule-assisted parser, local deterministic metrics, media transcribers, and stage logic. | **NEXT** |
-| **Phase 4** | Advanced Contextual Routing & Decision Logic | Integrate relational contexts (history, user profile metrics, business domain verifications) and decomposed 3-stage engine. | *Upcoming* |
+| **Phase 3** | Pipeline & Feature Extraction Setup | Map dataset to entities, map modules to dataset, specify trust/urgency/risk/behavior feature matrix. | **COMPLETE** |
+| **Phase 4** | Advanced Contextual Routing & Decision Logic | Integrate relational contexts (history, user profile metrics, business domain verifications) and decomposed 3-stage engine. | **NEXT** |
 | **Phase 5** | Evaluation, Calibration & Final Package | Evaluate predictions, calibrate confidence, format output, resolve all constraints, verify logs, package into `code.zip`. | *Upcoming* |
 
 ### Changelog & Revision History
@@ -164,6 +164,7 @@ The evaluation compares predictions in `output.csv` against hidden ground-truth 
 - **2026-08-01 (Phase 3 - Section 1):** Created `DATA_ENTITIES.md` mapping physical dataset columns to logical system entities.
 - **2026-08-01 (Phase 3 - Section 2):** Completed Phase 3 - Section 2 (Dataset Relationship Mapping) and appended to `DATA_ENTITIES.md`.
 - **2026-08-01 (Phase 3 - Section 3):** Completed Phase 3 - Section 3 (Module -> Dataset Mapping) and appended to `DATA_ENTITIES.md`.
+- **2026-08-01 (Phase 3 - Section 4):** Completed Phase 3 - Section 4 (Feature Mapping) and appended to `DATA_ENTITIES.md`. Phase 3 is now complete.
 
 ---
 

@@ -159,4 +159,66 @@ Below is the mapping detailing exactly which datasets are consumed and produced 
 *   **Consumes:** `DecisionResult`
 *   **Produces:** `output.csv`
 
+---
+
+### Section 4: Feature Mapping
+
+Below is the mapping for every feature extracted by the Feature Extractor, defining its source, type, and purpose:
+
+**Sender Trust**
+- *Source:* `users.csv`, `message_events.csv`, `message_history.csv`
+- *Type:* Derived
+- *Purpose:* Estimate whether the recipient trusts this sender.
+
+**Business Verification (Business Trust)**
+- *Source:* `business_accounts.csv`, `user_business_history.csv`
+- *Type:* Direct / Derived
+- *Purpose:* Determine the legitimacy of a business sender.
+
+**Relationship Strength**
+- *Source:* `message_history.csv`, `message_events.csv`, `groups.csv`
+- *Type:* Derived
+- *Purpose:* Quantify the closeness between sender and recipient to prioritize personal connections.
+
+**Urgency**
+- *Source:* `messages.csv`, `images.csv`, `voice_notes.csv`
+- *Type:* Derived
+- *Purpose:* Assess time-sensitivity and necessity of immediate interruption (e.g., emergencies, direct mentions).
+
+**Promotion Score**
+- *Source:* `messages.csv`, `images.csv`, `business_accounts.csv`
+- *Type:* Derived
+- *Purpose:* Detect marketing, sales, or promotional content typically routed to digest.
+
+**Spam Risk**
+- *Source:* `messages.csv`, `users.csv` (sender profile)
+- *Type:* Derived
+- *Purpose:* Identify low-value, unwanted, or repetitive noise.
+
+**Forward Risk**
+- *Source:* `messages.csv` (e.g., is_forwarded flag)
+- *Type:* Direct / Derived
+- *Purpose:* Detect viral, mass-forwarded, or chain-mail content which usually requires lower priority.
+
+**Scam Indicators**
+- *Source:* `messages.csv`, `images.csv`, `voice_notes.csv`
+- *Type:* Derived
+- *Purpose:* Identify phishing, OTP fraud, or safety threats to trigger the Safety Override (mute).
+
+**Historical Engagement**
+- *Source:* `message_events.csv`, `message_history.csv`
+- *Type:* Derived
+- *Purpose:* Measure user interaction with similar past messages or senders to predict current interest.
+
+**Notification Fatigue**
+- *Source:* `daily_notification_summary.csv`
+- *Type:* Derived
+- *Purpose:* Prevent overwhelming the user if they have received a high volume of notifications recently.
+
+**Quiet Hours**
+- *Source:* `users.csv` (user preferences)
+- *Type:* Direct
+- *Purpose:* Determine whether the notification should interrupt the user immediately based on time-of-day preferences.
+
+
 
