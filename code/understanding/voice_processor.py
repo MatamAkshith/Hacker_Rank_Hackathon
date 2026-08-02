@@ -1,14 +1,23 @@
+import os
 from typing import Optional, Any
 from code.context.models import UnifiedContext
 from code.understanding.models import UnderstandingResult
 from code.understanding.processors.base import BaseProcessor
 from code.understanding.cache import MediaCache
+from code.ai.gemini_client import GeminiClient
 
 class VoiceProcessor(BaseProcessor):
-    """Processor to analyze audio/voice attachments (ASR/transcription)."""
+    """Processor to analyze audio/voice attachments (ASR/transcription) using GeminiClient."""
     
-    def __init__(self, cache: Optional[MediaCache] = None):
+    def __init__(self, cache: Optional[MediaCache] = None, gemini_client: Optional[GeminiClient] = None):
         self.cache = cache or MediaCache()
+        self.gemini_client = gemini_client
+        if self.gemini_client is None:
+            try:
+                self.gemini_client = GeminiClient()
+            except ValueError:
+                # Graceful fallback: keep client as None if GEMINI_API_KEY is not configured
+                self.gemini_client = None
         
     def process(self, context: UnifiedContext) -> Optional[UnderstandingResult]:
         """Extracts semantic understanding from voice context with caching."""
@@ -28,11 +37,43 @@ class VoiceProcessor(BaseProcessor):
         if cached:
             return cached
             
-        # 2. Cache miss: compute and save
-        result = self._process_placeholder(voice_path)
+        # 2. Cache miss: route to Gemini Voice or placeholder fallback
+        if self.gemini_client is not None:
+            try:
+                result = self._process_via_transcription(voice_path)
+            except Exception:
+                result = self._process_placeholder(voice_path)
+        else:
+            result = self._process_placeholder(voice_path)
+            
         self.cache.set("voice", media_id, result)
         return result
         
+    def _process_via_transcription(self, voice_path: str) -> UnderstandingResult:
+        """Sends audio voice file and system instructions to Gemini LLM for native transcription and extraction."""
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        prompt_path = os.path.abspath(os.path.join(current_dir, "..", "ai", "prompts", "voice.md"))
+        
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                system_instruction = f.read()
+        except Exception:
+            system_instruction = "Act as a WhatsApp audio semantic analyzer. Return valid JSON matching the UnderstandingResult schema."
+            
+        user_prompt = "Transcribe the attached voice note natively and output the structured semantic details."
+        
+        # Invoke audio generate
+        result = self.gemini_client.generate(
+            system_instruction=system_instruction,
+            prompt=user_prompt,
+            response_model=UnderstandingResult,
+            media_path=voice_path
+        )
+        
+        # Enforce strict processing status
+        result.processing_status = "processed_via_gemini_voice"
+        return result
+
     def _process_placeholder(self, voice_path: str) -> UnderstandingResult:
         """Returns placeholder semantic representation for audio media."""
         return UnderstandingResult(
@@ -48,10 +89,3 @@ class VoiceProcessor(BaseProcessor):
             contains_media=True,
             processing_status="placeholder_applied"
         )
-        
-    def _process_via_transcription(self, voice_path: str) -> Optional[UnderstandingResult]:
-        """Placeholder stub for future two-step audio pipeline (ASR -> LLM).
-        
-        Will transcribe the audio file and extract semantic indicators from the transcript.
-        """
-        raise NotImplementedError("ASR/Transcription integration is planned for a future sprint.")
