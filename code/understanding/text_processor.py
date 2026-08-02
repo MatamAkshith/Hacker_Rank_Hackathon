@@ -2,8 +2,9 @@ import re
 from typing import Optional, List
 from code.context.models import UnifiedContext
 from code.understanding.models import UnderstandingResult
+from code.understanding.processors.base import BaseProcessor
 
-class TextProcessor:
+class TextProcessor(BaseProcessor):
     """Processor to analyze and extract semantic meaning from raw text messages using heuristics."""
     
     def process(self, context: UnifiedContext) -> Optional[UnderstandingResult]:
