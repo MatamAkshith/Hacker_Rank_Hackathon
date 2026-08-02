@@ -88,7 +88,8 @@ class FeatureExtractor:
             trust=trust,
             urgency=urgency,
             risk=risk,
-            behaviour=behaviour
+            behaviour=behaviour,
+            group_is_muted=context.metadata.group_muted,
         )
 
     @register_feature("behaviour", "quiet_hours")

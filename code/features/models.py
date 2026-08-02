@@ -85,7 +85,19 @@ class FeatureVector(BaseModel):
     urgency: UrgencyFeatures
     risk: RiskFeatures
     behaviour: BehaviourFeatures
-    
+
+    # Hard-rule eligibility flags
+    is_blocked: bool = Field(
+        False,
+        description="True if the sender is explicitly blocked by the user. "
+                    "Reserved for future block-list integration."
+    )
+    group_is_muted: bool = Field(
+        False,
+        description="True if the group this message belongs to has been muted "
+                    "by the recipient. Sourced from ContextMetadata.group_muted."
+    )
+
     # Placeholders for future media processing sprints
     semantic_summary: Optional[str] = None
     image_summary: Optional[str] = None

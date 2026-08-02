@@ -1,9 +1,8 @@
 """DecisionEngine: Main orchestrator of the Decision module.
 
-Takes the full set of upstream pipeline outputs and produces the final
-routing action (notify / digest / mute) for an incoming message.
-
-Sprint 7.1 — scaffold only. All sub-components are wired but not yet invoked.
+Sprint 7.2: Hard-rule short-circuit is now active. If a hard rule fires,
+its DecisionResult is returned immediately. Otherwise the probabilistic
+scoring pipeline placeholder is returned (scoring implemented in Sprint 7.3).
 """
 
 from code.features.models import FeatureVector
@@ -23,11 +22,7 @@ class DecisionEngine:
     """
 
     def __init__(self):
-        """Instantiate and wire all sub-components.
-
-        Components are wired here but not yet invoked in decide().
-        Full orchestration will be implemented in Sprint 7.2.
-        """
+        """Instantiate and wire all sub-components."""
         self.hard_rules = HardRulesEvaluator()
         self.scorer     = BaseScorer()
         self.adjuster   = ScoreAdjuster()
@@ -42,8 +37,12 @@ class DecisionEngine:
     ) -> DecisionResult:
         """Determine the final routing action for the current message.
 
-        Sprint 7.1: Returns a safe scaffold default without invoking any
-        sub-components. Full logic will be wired in Sprint 7.2.
+        Sprint 7.2 pipeline:
+          1. HardRulesEvaluator — returns a terminal DecisionResult if any
+             absolute rule fires, bypassing all downstream scoring.
+          2. Scoring placeholder — returns a default 'unassigned' DecisionResult
+             until BaseScorer / ScoreAdjuster / ActionSelector are implemented
+             in Sprint 7.3.
 
         Args:
             features:      FeatureVector from the Feature Extraction stage.
@@ -52,6 +51,14 @@ class DecisionEngine:
             evidence:      EvidenceResult from the Evidence Retrieval Engine.
 
         Returns:
-            A DecisionResult with action="unassigned" (scaffold default).
+            A DecisionResult with a final action and confidence score.
         """
+        # Step 1: Hard-rule short-circuit
+        hard_rule_result = self.hard_rules.evaluate(
+            features, understanding, assessment, evidence
+        )
+        if hard_rule_result is not None:
+            return hard_rule_result
+
+        # Steps 2-4: Probabilistic scoring (placeholder — Sprint 7.3)
         return DecisionResult()

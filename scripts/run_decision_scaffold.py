@@ -58,8 +58,8 @@ def main():
             # ── Assertions ────────────────────────────────────────────────────
             assert isinstance(decision, DecisionResult), \
                 f"Expected DecisionResult, got {type(decision)}"
-            assert decision.action == "unassigned", \
-                f"Expected action='unassigned', got '{decision.action}'"
+            assert decision.action in ("notify", "mute", "digest", "unassigned"), \
+                f"Unexpected action '{decision.action}' for {msg_id}"
             assert isinstance(decision.confidence, float), \
                 "confidence must be a float"
             assert 0.0 <= decision.confidence <= 1.0, \
