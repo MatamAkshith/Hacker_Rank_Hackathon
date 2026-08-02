@@ -11,7 +11,7 @@ class UnderstandingEngine:
     
     def __init__(self, cache: Optional[MediaCache] = None):
         self.cache = cache or MediaCache()
-        self.text_processor = TextProcessor()
+        self.text_processor = TextProcessor(self.cache)
         self.image_processor = ImageProcessor(self.cache)
         self.voice_processor = VoiceProcessor(self.cache)
 

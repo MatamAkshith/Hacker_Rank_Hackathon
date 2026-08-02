@@ -63,9 +63,11 @@ class EvidenceSelector:
 
         reason = self._build_reason(cand, matched_feats, retrieval_srcs)
 
-        # Determine user_action: ignored, opened, muted
-        user_action = "ignored"
-        if cand.get("message_reported"):
+        # Determine user_action: ignored, opened, muted (None when unknown)
+        user_action = None
+        if cand.get("message_reported") or "engagement:message_reported" in matched_feats:
+            user_action = "muted"
+        elif cand.get("muted_after_message"):
             user_action = "muted"
         elif cand.get("message_replied") or "engagement:user_replied" in matched_feats:
             user_action = "opened"

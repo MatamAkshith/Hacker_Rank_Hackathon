@@ -29,6 +29,12 @@ class TestUnderstandingFramework(unittest.TestCase):
         """Set up cache directory and engine."""
         self.test_cache_dir = "test_cache"
         self.cache = MediaCache(base_dir=self.test_cache_dir)
+        
+        # Temporarily disable GEMINI_API_KEY to force consistent placeholder fallback
+        self.api_key_backup = os.environ.get("GEMINI_API_KEY")
+        if "GEMINI_API_KEY" in os.environ:
+            del os.environ["GEMINI_API_KEY"]
+            
         self.engine = UnderstandingEngine(cache=self.cache)
         
         # Build base metadata
@@ -53,6 +59,9 @@ class TestUnderstandingFramework(unittest.TestCase):
         """Cleanup test cache directory."""
         if os.path.exists(self.test_cache_dir):
             shutil.rmtree(self.test_cache_dir)
+            
+        if self.api_key_backup is not None:
+            os.environ["GEMINI_API_KEY"] = self.api_key_backup
 
     def test_text_only_understanding(self):
         """Verify that TextProcessor correctly analyzes raw text and returns expected semantic features."""

@@ -356,25 +356,32 @@ class SimilarityRanker:
         by DataLoader, OR read from the loader by message_id if available.
         """
         # Candidates carry event fields if they were merged by the context builder;
-        # fall back to zero if the key is absent.
+        # otherwise hydrate from the loader and attach them for downstream selectors.
         reported  = bool(cand.get("message_reported"))
-        if reported:
-            return 0.00  # Negatively signals relevance
-
         replied   = bool(cand.get("message_replied"))
         opened    = bool(cand.get("message_opened"))
         dismissed = bool(cand.get("notification_dismissed"))
 
-        # Try to fetch event data from loader if not already on the candidate
         if not replied and not opened and not dismissed and not reported:
             cand_mid = str(cand.get("message_id", ""))
             event = self._loader._message_events_idx.get(cand_mid, {})
-            reported  = bool(event.get("message_reported", False))
-            replied   = bool(event.get("message_replied", False))
-            opened    = bool(event.get("message_opened", False))
-            dismissed = bool(event.get("notification_dismissed", False))
+            if event:
+                for key in (
+                    "message_opened",
+                    "message_replied",
+                    "notification_dismissed",
+                    "muted_after_message",
+                    "message_reported",
+                ):
+                    if key in event:
+                        cand[key] = event[key]
+                reported  = bool(event.get("message_reported", False))
+                replied   = bool(event.get("message_replied", False))
+                opened    = bool(event.get("message_opened", False))
+                dismissed = bool(event.get("notification_dismissed", False))
 
         if reported:
+            features.append("engagement:message_reported")
             return 0.00
 
         if replied:

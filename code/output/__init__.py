@@ -1,0 +1,1 @@
+"""Submission output generation module."""

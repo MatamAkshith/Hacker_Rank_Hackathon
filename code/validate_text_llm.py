@@ -58,7 +58,7 @@ class TestTextProcessorLLM(unittest.TestCase):
             user_id="u_001",
             conversation_type="personal",
             created_at="2026-07-30 22:19",
-            message_text="URGENT: Flash sale up to 50% off!",
+            message_text="Could you review the attached note sometime?",
             forwarded_count=0
         )
         
@@ -96,7 +96,7 @@ class TestTextProcessorLLM(unittest.TestCase):
         self.assertIn("WhatsApp messages", kwargs["system_instruction"])
         
         # Assert prompt contains raw text and context DND window
-        self.assertIn("URGENT: Flash sale up to 50% off!", kwargs["prompt"])
+        self.assertIn("Could you review the attached note sometime?", kwargs["prompt"])
         self.assertIn("23:00-08:00", kwargs["prompt"])
 
 if __name__ == "__main__":

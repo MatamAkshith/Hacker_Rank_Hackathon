@@ -1,0 +1,43 @@
+{
+  "total_messages_processed": 110,
+  "expected_messages": 110,
+  "failed_messages": [],
+  "action_distribution": {
+    "digest": 10,
+    "mute": 60,
+    "notify": 40
+  },
+  "confidence_distribution": {
+    "0.00-0.24": 0,
+    "0.25-0.49": 4,
+    "0.50-0.74": 23,
+    "0.75-1.00": 83,
+    "invalid": 0
+  },
+  "missing_values": [],
+  "duplicate_message_ids": [],
+  "schema_validation": {
+    "valid": true,
+    "expected_columns": [
+      "message_id",
+      "action",
+      "message_type",
+      "reason",
+      "confidence",
+      "evidence_message_ids"
+    ],
+    "actual_columns": [
+      "message_id",
+      "action",
+      "message_type",
+      "reason",
+      "confidence",
+      "evidence_message_ids"
+    ],
+    "errors": []
+  },
+  "confidence_violations": [],
+  "evidence_id_violations": [],
+  "execution_time_seconds": 0.001353,
+  "is_valid": true
+}

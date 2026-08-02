@@ -7,6 +7,7 @@ class DataLoader:
     """Loads and queries physical CSV datasets under a single-responsibility data retrieval API."""
     
     def __init__(self):
+        self._data_dir: Optional[str] = None
         self._users: Optional[pd.DataFrame] = None
         self._messages: Optional[pd.DataFrame] = None
         self._groups: Optional[pd.DataFrame] = None
@@ -37,8 +38,29 @@ class DataLoader:
         row_dict = row.to_dict() if hasattr(row, "to_dict") else dict(row)
         return {k: (None if pd.isna(v) else v) for k, v in row_dict.items()}
 
+    def _resolve_media_path(self, file_path: Optional[str]) -> Optional[str]:
+        """Resolve CSV-relative media paths against the loaded dataset directory."""
+        if not file_path:
+            return file_path
+        if os.path.isabs(file_path) or os.path.exists(file_path):
+            return file_path
+        if self._data_dir:
+            candidate = os.path.join(self._data_dir, file_path)
+            if os.path.exists(candidate):
+                return candidate
+        return file_path
+
+    def _with_resolved_media_path(self, media: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Return a shallow copy of a media row with ``file_path`` resolved."""
+        if not media:
+            return media
+        resolved = dict(media)
+        resolved["file_path"] = self._resolve_media_path(resolved.get("file_path"))
+        return resolved
+
     def load_all(self, data_dir: str):
         """Loads all CSVs from the dataset directory into memory and builds lookup indexes."""
+        self._data_dir = data_dir
         self._users = pd.read_csv(os.path.join(data_dir, "users.csv"))
         self._messages = pd.read_csv(os.path.join(data_dir, "messages.csv"))
         self._groups = pd.read_csv(os.path.join(data_dir, "groups.csv"))
@@ -180,8 +202,8 @@ class DataLoader:
 
     def get_image(self, media_id: str) -> Optional[Dict[str, Any]]:
         """Returns image dictionary matching media_id in O(1) time."""
-        return self._images_idx.get(str(media_id))
+        return self._with_resolved_media_path(self._images_idx.get(str(media_id)))
 
     def get_voice(self, media_id: str) -> Optional[Dict[str, Any]]:
         """Returns voice note dictionary matching media_id in O(1) time."""
-        return self._voice_notes_idx.get(str(media_id))
+        return self._with_resolved_media_path(self._voice_notes_idx.get(str(media_id)))

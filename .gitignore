@@ -5,9 +5,12 @@ __pycache__/
 venv/
 ENV/
 env/
+.env
 .DS_Store
 .agents/
 .gemini/
 log.txt
 cache/
 output/
+!code/output/
+!code/output/*.py

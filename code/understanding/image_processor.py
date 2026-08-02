@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional, Any
 from code.context.models import UnifiedContext
@@ -5,6 +6,9 @@ from code.understanding.models import UnderstandingResult
 from code.understanding.processors.base import BaseProcessor
 from code.understanding.cache import MediaCache
 from code.ai.gemini_client import GeminiClient
+
+logger = logging.getLogger(__name__)
+
 
 class ImageProcessor(BaseProcessor):
     """Processor to analyze image attachments (OCR and visual description) using GeminiClient."""
@@ -32,9 +36,12 @@ class ImageProcessor(BaseProcessor):
         if not image_path:
             image_path = "unknown_image_path"
             
-        # 1. Check cache hit
+        # 1. Check cache hit (ignore stale placeholders when Gemini is available)
         cached = self.cache.get("image", media_id)
-        if cached:
+        if cached and not (
+            self.gemini_client is not None
+            and getattr(cached, "processing_status", "") == "placeholder_applied"
+        ):
             return cached
             
         # 2. Cache miss: route to Gemini Vision or placeholder fallback
@@ -42,11 +49,14 @@ class ImageProcessor(BaseProcessor):
             try:
                 result = self._process_via_gemini_vision(image_path)
             except Exception:
+                logger.exception("Gemini vision failed for media_id=%s path=%s", media_id, image_path)
                 result = self._process_placeholder(image_path)
         else:
             result = self._process_placeholder(image_path)
             
-        self.cache.set("image", media_id, result)
+        # Do not persist placeholder failures when Gemini is configured; allow retries.
+        if result.processing_status != "placeholder_applied" or self.gemini_client is None:
+            self.cache.set("image", media_id, result)
         return result
         
     def _process_via_gemini_vision(self, image_path: str) -> UnderstandingResult:
