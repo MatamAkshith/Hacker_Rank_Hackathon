@@ -73,12 +73,12 @@ class TestMessageAssessmentScaffold(unittest.TestCase):
             contains_media=False,
             processing_status="success"
         )
-        
-        assessment = engine.evaluate(context, understanding)
+        from tests.test_assessment_trust_risk import create_mock_features
+        assessment = engine.evaluate(context, understanding, features=create_mock_features())
         
         # Assert base data contract types and status
         self.assertIsInstance(assessment, MessageAssessment)
-        self.assertEqual(assessment.status, "scaffold_complete")
+        self.assertEqual(assessment.status, "evaluated")
         
         # Assert default values inside component sub-assessments
         self.assertEqual(assessment.trust.trust_score, 0.0)

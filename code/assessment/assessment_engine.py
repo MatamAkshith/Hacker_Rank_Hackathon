@@ -1,5 +1,8 @@
+from typing import Optional
 from code.context.models import UnifiedContext
 from code.understanding.models import UnderstandingResult
+from code.features.models import FeatureVector
+from code.features.extractor import FeatureExtractor
 from code.assessment.models import MessageAssessment
 from code.assessment.trust import TrustCalculator
 from code.assessment.risk import RiskCalculator
@@ -19,14 +22,27 @@ class AssessmentEngine:
         self.personalization_calculator = PersonalizationCalculator()
         self.attention_calculator = AttentionCalculator()
 
-    def evaluate(self, context: UnifiedContext, understanding: UnderstandingResult) -> MessageAssessment:
+    def evaluate(
+        self,
+        context: UnifiedContext,
+        understanding: UnderstandingResult,
+        features: Optional[FeatureVector] = None
+    ) -> MessageAssessment:
         """Evaluates trust, risk, urgency, importance, personalization, and attention dimensions."""
-        trust = self.trust_calculator.calculate(context, understanding)
-        risk = self.risk_calculator.calculate(context, understanding)
+        if features is None:
+            features = FeatureExtractor().extract(context)
+            
+        trust = self.trust_calculator.calculate(features, understanding)
+        risk = self.risk_calculator.calculate(features, understanding, trust)
+        
+        # Skeletons for other calculators accepting context/understanding for now
         urgency = self.urgency_calculator.calculate(context, understanding)
         importance = self.importance_calculator.calculate(context, understanding)
         personalization = self.personalization_calculator.calculate(context, understanding)
         attention = self.attention_calculator.calculate(context, understanding)
+        
+        # Aggregate overall score (higher is safer/better)
+        overall_score = trust.trust_score - risk.risk_score
         
         return MessageAssessment(
             trust=trust,
@@ -35,6 +51,6 @@ class AssessmentEngine:
             importance=importance,
             personalization=personalization,
             attention=attention,
-            overall_score=0.0,
-            status="scaffold_complete"
+            overall_score=overall_score,
+            status="evaluated"
         )

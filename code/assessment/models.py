@@ -10,6 +10,8 @@ class TrustAssessment(BaseModel):
 class RiskAssessment(BaseModel):
     """Assessment of security, spam, and scam risks."""
     risk_score: float = Field(0.0, description="Evaluated risk score, between 0.0 and 1.0")
+    spam_probability: float = Field(0.0, description="Evaluated probability of being spam, between 0.0 and 1.0")
+    scam_probability: float = Field(0.0, description="Evaluated probability of being scam/phishing, between 0.0 and 1.0")
     threat_level: str = Field("none", description="Categorical threat level (e.g., high, medium, low, none)")
     reasons: List[str] = Field(default_factory=list, description="Reasoning or evidence behind risk score")
 
