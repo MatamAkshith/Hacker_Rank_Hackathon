@@ -35,9 +35,9 @@ class AssessmentEngine:
         trust = self.trust_calculator.calculate(features, understanding)
         risk = self.risk_calculator.calculate(features, understanding, trust)
         
-        # Skeletons for other calculators accepting context/understanding for now
-        urgency = self.urgency_calculator.calculate(context, understanding)
-        importance = self.importance_calculator.calculate(context, understanding)
+        # Calculators accepting features and understanding
+        urgency = self.urgency_calculator.calculate(features, understanding)
+        importance = self.importance_calculator.calculate(features, understanding)
         personalization = self.personalization_calculator.calculate(context, understanding)
         attention = self.attention_calculator.calculate(context, understanding)
         

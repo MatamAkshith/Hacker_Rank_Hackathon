@@ -87,10 +87,10 @@ class TestMessageAssessmentScaffold(unittest.TestCase):
         self.assertEqual(assessment.risk.risk_score, 0.0)
         self.assertEqual(assessment.risk.threat_level, "none")
         
-        self.assertEqual(assessment.urgency.urgency_score, 0.0)
+        self.assertEqual(assessment.urgency.urgency_score, 0.1)
         self.assertEqual(assessment.urgency.time_sensitivity, "low")
         
-        self.assertEqual(assessment.importance.importance_score, 0.0)
+        self.assertEqual(assessment.importance.importance_score, 0.25)
         self.assertEqual(assessment.importance.value_category, "neutral")
         
         self.assertEqual(assessment.personalization.affinity_score, 0.0)

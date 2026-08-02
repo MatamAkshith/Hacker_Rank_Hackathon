@@ -19,11 +19,16 @@ class UrgencyAssessment(BaseModel):
     """Assessment of message urgency."""
     urgency_score: float = Field(0.0, description="Evaluated urgency score, between 0.0 and 1.0")
     time_sensitivity: str = Field("low", description="Categorical time sensitivity (e.g., high, medium, low)")
+    reasons: List[str] = Field(default_factory=list, description="Reasoning behind urgency score")
 
 class ImportanceAssessment(BaseModel):
     """Assessment of message importance and content value."""
     importance_score: float = Field(0.0, description="Evaluated importance score, between 0.0 and 1.0")
     value_category: str = Field("neutral", description="Categorical importance type (e.g., critical, informational, neutral, promotional)")
+    payment_probability: float = Field(0.0, description="Evaluated payment intent probability, between 0.0 and 1.0")
+    event_probability: float = Field(0.0, description="Evaluated scheduling event probability, between 0.0 and 1.0")
+    promotion_probability: float = Field(0.0, description="Evaluated marketing/promo probability, between 0.0 and 1.0")
+    reasons: List[str] = Field(default_factory=list, description="Reasoning behind importance score")
 
 class PersonalizationAssessment(BaseModel):
     """Assessment of relevance and historical affinity to the specific user."""
