@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class EvidenceItem(BaseModel):
@@ -7,6 +7,7 @@ class EvidenceItem(BaseModel):
     similarity_score: float = Field(0.0, description="Similarity relevance score to the current message, between 0.0 and 1.0")
     reason: str = Field("", description="Human-readable explanation of why this message was retrieved as evidence")
     matched_features: List[str] = Field(default_factory=list, description="List of feature names that drove the retrieval match")
+    user_action: Optional[str] = Field(None, description="Historical user response action: e.g., 'ignored', 'opened', 'muted'")
 
 class EvidenceResult(BaseModel):
     """Root container returned by the RetrievalEngine representing the full set of retrieved evidence."""

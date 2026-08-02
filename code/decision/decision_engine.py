@@ -1,8 +1,8 @@
 """DecisionEngine: Main orchestrator of the Decision module.
 
-Sprint 7.2: Hard-rule short-circuit is now active. If a hard rule fires,
-its DecisionResult is returned immediately. Otherwise the probabilistic
-scoring pipeline placeholder is returned (scoring implemented in Sprint 7.3).
+Sprint 7.3/7.4: Short-circuiting and base probabilistic scoring/adjustments
+are now active. Adjustments write directly to the decision_trace audit log.
+Action selection remains a scaffold placeholder.
 """
 
 from code.features.models import FeatureVector
@@ -37,13 +37,6 @@ class DecisionEngine:
     ) -> DecisionResult:
         """Determine the final routing action for the current message.
 
-        Sprint 7.2 pipeline:
-          1. HardRulesEvaluator — returns a terminal DecisionResult if any
-             absolute rule fires, bypassing all downstream scoring.
-          2. Scoring placeholder — returns a default 'unassigned' DecisionResult
-             until BaseScorer / ScoreAdjuster / ActionSelector are implemented
-             in Sprint 7.3.
-
         Args:
             features:      FeatureVector from the Feature Extraction stage.
             understanding: UnderstandingResult from the Understanding Engine.
@@ -51,7 +44,7 @@ class DecisionEngine:
             evidence:      EvidenceResult from the Evidence Retrieval Engine.
 
         Returns:
-            A DecisionResult with a final action and confidence score.
+            A DecisionResult with the final routing decision and confidence.
         """
         # Step 1: Hard-rule short-circuit
         hard_rule_result = self.hard_rules.evaluate(
@@ -60,5 +53,29 @@ class DecisionEngine:
         if hard_rule_result is not None:
             return hard_rule_result
 
-        # Steps 2-4: Probabilistic scoring (placeholder — Sprint 7.3)
-        return DecisionResult()
+        # Audit trace log for base and adjusted scoring
+        trace = []
+
+        # Step 2: Base Scoring
+        base_scores = self.scorer.calculate_base_scores(
+            assessment, features, understanding, evidence
+        )
+        trace.append(
+            f"base_scoring: notify_score={base_scores.notify_score:.3f}, "
+            f"digest_score={base_scores.digest_score:.3f}, "
+            f"mute_score={base_scores.mute_score:.3f}"
+        )
+
+        # Step 3: Evidence-Based Adjustment
+        adjusted_scores = self.adjuster.apply_adjustments(
+            base_scores, evidence, decision_trace=trace
+        )
+
+        # Step 4: Action Selection (placeholder — Sprint 7.5)
+        # Returns unassigned action carrying the populated scoring audit trace
+        return DecisionResult(
+            action="unassigned",
+            reason="Probabilistic scoring complete, selection pending.",
+            confidence=0.5,
+            decision_trace=trace
+        )

@@ -63,11 +63,23 @@ class EvidenceSelector:
 
         reason = self._build_reason(cand, matched_feats, retrieval_srcs)
 
+        # Determine user_action: ignored, opened, muted
+        user_action = "ignored"
+        if cand.get("message_reported"):
+            user_action = "muted"
+        elif cand.get("message_replied") or "engagement:user_replied" in matched_feats:
+            user_action = "opened"
+        elif cand.get("message_opened") or "engagement:user_opened" in matched_feats:
+            user_action = "opened"
+        elif cand.get("notification_dismissed") or "engagement:notification_dismissed" in matched_feats:
+            user_action = "ignored"
+
         return EvidenceItem(
             message_id=msg_id,
             similarity_score=similarity,
             reason=reason,
             matched_features=matched_feats,
+            user_action=user_action,
         )
 
     def _build_reason(
