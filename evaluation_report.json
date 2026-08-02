@@ -4,14 +4,14 @@
   "failed_messages": [],
   "action_distribution": {
     "digest": 10,
-    "mute": 60,
-    "notify": 40
+    "mute": 61,
+    "notify": 39
   },
   "confidence_distribution": {
     "0.00-0.24": 0,
     "0.25-0.49": 4,
-    "0.50-0.74": 23,
-    "0.75-1.00": 83,
+    "0.50-0.74": 22,
+    "0.75-1.00": 84,
     "invalid": 0
   },
   "missing_values": [],
@@ -38,6 +38,6 @@
   },
   "confidence_violations": [],
   "evidence_id_violations": [],
-  "execution_time_seconds": 0.001353,
+  "execution_time_seconds": 0.000775,
   "is_valid": true
 }

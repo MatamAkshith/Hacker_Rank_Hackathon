@@ -62,10 +62,30 @@ class OutputGenerator:
         evidence: EvidenceResult,
     ) -> OutputRow:
         """Build a submission row for one processed message."""
+        is_scam = False
+        is_spam = False
+
+        if decision.decision_trace:
+            for t in decision.decision_trace:
+                if "scam_prevention" in t:
+                    is_scam = True
+                elif "spam_prevention" in t:
+                    is_spam = True
+
+        if "High probability of scam" in decision.reason:
+            is_scam = True
+
+        if is_scam:
+            msg_type = "scam"
+        elif is_spam:
+            msg_type = "spam"
+        else:
+            msg_type = self._normalize_message_type(understanding)
+
         return OutputRow(
             message_id=str(message_id),
             action=decision.action,
-            message_type=self._normalize_message_type(understanding),
+            message_type=msg_type,
             reason=decision.reason,
             confidence=float(decision.confidence),
             evidence_message_ids=self._serialize_evidence(evidence),

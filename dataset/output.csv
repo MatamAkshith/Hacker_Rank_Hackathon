@@ -2,14 +2,14 @@ message_id,action,message_type,reason,confidence,evidence_message_ids
 msg_023,notify,payment,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.36) with a confidence of 0.99.,0.9851,message_0243;message_0102;message_0101
 msg_091,mute,business_update,Action selected: mute. Winning score (0.66) comfortably exceeded runner-up score (0.40) with a confidence of 0.84.,0.8373,message_0238;message_0381;message_0380
 msg_090,mute,personal,Action selected: mute. Winning score (0.42) comfortably exceeded runner-up score (0.31) with a confidence of 0.63.,0.6276,none
-msg_048,mute,payment,High probability of scam or malicious intent.,1.0,message_0151;message_0152;message_0237
+msg_048,mute,scam,High probability of scam or malicious intent.,1.0,message_0151;message_0152;message_0237
 msg_040,mute,personal,Action selected: mute. Winning score (0.98) significantly dominated runner-up score (0.12) with a confidence of 0.99.,0.9943,message_0136;message_0135;message_0259
 msg_075,digest,personal,Action selected: digest. Winning score (0.60) marginally exceeded runner-up score (0.56) with a confidence of 0.49.,0.4856,message_0205;message_0206;message_0294
 msg_005,notify,personal,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.42) with a confidence of 0.97.,0.9712,message_0401;message_0114;message_0065
 msg_104,mute,personal,Action selected: mute. Winning score (0.76) significantly dominated runner-up score (0.12) with a confidence of 0.97.,0.9746,message_0383;message_0232;message_0224
 msg_069,mute,personal,Action selected: mute. Winning score (0.94) significantly dominated runner-up score (0.10) with a confidence of 0.99.,0.9932,message_0247;message_0080;message_0194
-msg_107,mute,payment,High probability of scam or malicious intent.,1.0,message_0235;message_0056;message_0369
-msg_070,mute,payment,High probability of scam or malicious intent.,1.0,message_0369;message_0213;message_0195
+msg_107,mute,scam,High probability of scam or malicious intent.,1.0,message_0235;message_0056;message_0369
+msg_070,mute,scam,High probability of scam or malicious intent.,1.0,message_0369;message_0213;message_0195
 msg_003,notify,personal,Action selected: notify. Winning score (0.79) significantly dominated runner-up score (0.28) with a confidence of 0.96.,0.9641,message_0031;message_0400;message_0061
 msg_099,digest,personal,Action selected: digest. Winning score (0.67) marginally exceeded runner-up score (0.63) with a confidence of 0.54.,0.5428,message_0227;message_0249;message_0117
 msg_008,notify,business_update,Action selected: notify. Winning score (0.51) comfortably exceeded runner-up score (0.31) with a confidence of 0.75.,0.7508,message_0296;message_0071;message_0072
@@ -18,87 +18,87 @@ msg_060,notify,promotion,Action selected: notify. Winning score (0.84) comfortab
 msg_004,digest,personal,Action selected: digest. Winning score (0.60) marginally exceeded runner-up score (0.56) with a confidence of 0.47.,0.4691,message_0245;message_0005;message_0064
 msg_030,mute,personal,Action selected: mute. Winning score (0.94) significantly dominated runner-up score (0.10) with a confidence of 0.99.,0.9931,message_0115;message_0050;message_0335
 msg_045,notify,personal,Action selected: notify. Winning score (0.49) comfortably exceeded runner-up score (0.20) with a confidence of 0.79.,0.7937,message_0146;message_0145;message_0059
-msg_052,mute,payment,High probability of scam or malicious intent.,1.0,message_0208;message_0207;message_0159
+msg_052,mute,scam,High probability of scam or malicious intent.,1.0,message_0208;message_0207;message_0159
 msg_009,mute,personal,Action selected: mute. Winning score (0.37) marginally exceeded runner-up score (0.32) with a confidence of 0.52.,0.516,message_0074;message_0073
 msg_071,mute,personal,Action selected: mute. Winning score (0.51) marginally exceeded runner-up score (0.43) with a confidence of 0.60.,0.6003,message_0197;message_0198;message_0274
 msg_016,mute,personal,Action selected: mute. Winning score (0.77) comfortably exceeded runner-up score (0.28) with a confidence of 0.96.,0.9602,message_0147;message_0024;message_0201
-msg_065,mute,promotion,High probability of scam or malicious intent.,1.0,message_0261;message_0185;message_0186
+msg_065,mute,scam,High probability of scam or malicious intent.,1.0,message_0261;message_0185;message_0186
 msg_038,mute,personal,Action selected: mute. Winning score (0.90) significantly dominated runner-up score (0.10) with a confidence of 0.99.,0.9906,message_0131;message_0132;message_0009
 msg_086,notify,business_update,Action selected: notify. Winning score (0.99) significantly dominated runner-up score (0.41) with a confidence of 0.97.,0.9704,message_0222;message_0248
-msg_014,mute,promotion,High probability of scam or malicious intent.,1.0,message_0258;message_0018;message_0017
-msg_094,mute,promotion,High probability of scam or malicious intent.,1.0,message_0356;message_0048;message_0220
+msg_014,mute,scam,High probability of scam or malicious intent.,1.0,message_0258;message_0018;message_0017
+msg_094,mute,scam,High probability of scam or malicious intent.,1.0,message_0356;message_0048;message_0220
 msg_029,mute,personal,Action selected: mute. Winning score (0.59) comfortably exceeded runner-up score (0.37) with a confidence of 0.78.,0.7819,message_0401;message_0332;message_0113
 msg_105,mute,personal,Action selected: mute. Winning score (0.90) significantly dominated runner-up score (0.32) with a confidence of 0.98.,0.978,message_0373;message_0233;message_0372
 msg_002,digest,personal,Action selected: digest. Winning score (0.68) comfortably exceeded runner-up score (0.55) with a confidence of 0.69.,0.6868,message_0003;message_0059;message_0169
 msg_010,mute,business_update,Action selected: mute. Winning score (0.49) comfortably exceeded runner-up score (0.36) with a confidence of 0.66.,0.6621,message_0011;message_0242;message_0075
-msg_078,mute,payment,High probability of scam or malicious intent.,1.0,message_0211;message_0212;message_0358
+msg_078,mute,scam,High probability of scam or malicious intent.,1.0,message_0211;message_0212;message_0358
 msg_013,mute,promotion,Action selected: mute. Winning score (0.90) significantly dominated runner-up score (0.30) with a confidence of 0.97.,0.9702,message_0082;message_0081;message_0009
-msg_018,mute,promotion,High probability of scam or malicious intent.,1.0,message_0092;message_0091;message_0026
-msg_044,mute,payment,High probability of scam or malicious intent.,1.0,message_0036;message_0143;message_0144
+msg_018,mute,scam,High probability of scam or malicious intent.,1.0,message_0092;message_0091;message_0026
+msg_044,mute,scam,High probability of scam or malicious intent.,1.0,message_0036;message_0143;message_0144
 msg_032,notify,personal,Action selected: notify. Winning score (0.43) marginally exceeded runner-up score (0.40) with a confidence of 0.51.,0.5082,message_0119;message_0285;message_0120
 msg_106,notify,personal,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.30) with a confidence of 0.98.,0.9833,message_0377;message_0376;message_0234
 msg_006,notify,promotion,Action selected: notify. Winning score (0.64) comfortably exceeded runner-up score (0.44) with a confidence of 0.73.,0.7334,message_0269;message_0029;message_0044
-msg_109,mute,payment,High probability of scam or malicious intent.,1.0,message_0151;message_0152;message_0237
-msg_108,mute,payment,High probability of scam or malicious intent.,1.0,message_0094;message_0236;message_0093
-msg_019,mute,payment,High probability of scam or malicious intent.,1.0,message_0094;message_0236;message_0093
+msg_109,mute,scam,High probability of scam or malicious intent.,1.0,message_0151;message_0152;message_0237
+msg_108,mute,scam,High probability of scam or malicious intent.,1.0,message_0094;message_0236;message_0093
+msg_019,mute,scam,High probability of scam or malicious intent.,1.0,message_0094;message_0236;message_0093
 msg_088,mute,business_update,Action selected: mute. Winning score (0.87) significantly dominated runner-up score (0.20) with a confidence of 0.99.,0.986,message_0050;message_0335;message_0224
 msg_056,digest,personal,Action selected: digest. Winning score (0.66) marginally exceeded runner-up score (0.64) with a confidence of 0.51.,0.5052,message_0167;message_0226;message_0359
-msg_027,notify,personal,Action selected: notify. Winning score (0.51) comfortably exceeded runner-up score (0.41) with a confidence of 0.64.,0.6357,message_0272;message_0033;message_0007
+msg_027,mute,scam,High probability of scam or malicious intent.,1.0,message_0110;message_0109;message_0272
 msg_050,digest,personal,Action selected: digest. Winning score (0.60) marginally exceeded runner-up score (0.56) with a confidence of 0.54.,0.5355,message_0279;message_0278;message_0155
 msg_083,notify,personal,Action selected: notify. Winning score (0.66) marginally exceeded runner-up score (0.65) with a confidence of 0.50.,0.497,message_0219;message_0325
-msg_063,mute,payment,High probability of scam or malicious intent.,1.0,message_0182;message_0181;message_0255
+msg_063,mute,scam,High probability of scam or malicious intent.,1.0,message_0182;message_0181;message_0255
 msg_033,notify,promotion,Action selected: notify. Winning score (0.86) comfortably exceeded runner-up score (0.56) with a confidence of 0.86.,0.8617,message_0280;message_0121;message_0372
 msg_061,mute,personal,Action selected: mute. Winning score (0.91) significantly dominated runner-up score (0.10) with a confidence of 0.99.,0.9914,message_0247;message_0080;message_0079
 msg_020,mute,business_update,Action selected: mute. Winning score (0.98) significantly dominated runner-up score (0.36) with a confidence of 0.98.,0.9827,message_0401;message_0096;message_0095
-msg_017,mute,payment,High probability of scam or malicious intent.,1.0,message_0089;message_0090;message_0319
+msg_017,mute,scam,High probability of scam or malicious intent.,1.0,message_0089;message_0090;message_0319
 msg_058,mute,personal,Action selected: mute. Winning score (0.95) significantly dominated runner-up score (0.10) with a confidence of 0.99.,0.9936,message_0039;message_0040;message_0241
-msg_026,mute,payment,High probability of scam or malicious intent.,1.0,message_0032;message_0107;message_0108
+msg_026,mute,scam,High probability of scam or malicious intent.,1.0,message_0032;message_0107;message_0108
 msg_047,notify,personal,Action selected: notify. Winning score (0.94) significantly dominated runner-up score (0.30) with a confidence of 0.98.,0.9775,message_0029;message_0044;message_0269
-msg_046,mute,payment,High probability of scam or malicious intent.,1.0,message_0148;message_0147;message_0024
+msg_046,mute,scam,High probability of scam or malicious intent.,1.0,message_0148;message_0147;message_0024
 msg_042,notify,personal,Action selected: notify. Winning score (0.39) marginally exceeded runner-up score (0.30) with a confidence of 0.55.,0.5469,message_0058;message_0140;message_0057
-msg_079,mute,payment,High probability of scam or malicious intent.,1.0,message_0023;message_0045;message_0213
+msg_079,mute,scam,High probability of scam or malicious intent.,1.0,message_0023;message_0045;message_0213
 msg_098,digest,personal,Action selected: digest. Winning score (0.66) marginally exceeded runner-up score (0.63) with a confidence of 0.54.,0.5408,message_0226;message_0359;message_0054
 msg_037,notify,personal,Action selected: notify. Winning score (0.39) comfortably exceeded runner-up score (0.25) with a confidence of 0.61.,0.6086,message_0029;message_0044;message_0098
 msg_007,digest,personal,Action selected: digest. Winning score (0.65) marginally exceeded runner-up score (0.63) with a confidence of 0.50.,0.4995,message_0070;message_0069
 msg_085,notify,business_update,Action selected: notify. Winning score (0.97) comfortably exceeded runner-up score (0.61) with a confidence of 0.92.,0.9163,message_0221;message_0264;message_0263
 msg_001,digest,personal,Action selected: digest. Winning score (0.68) comfortably exceeded runner-up score (0.55) with a confidence of 0.67.,0.6678,message_0217;message_0167;message_0057
 msg_021,notify,payment,Action selected: notify. Winning score (0.96) significantly dominated runner-up score (0.25) with a confidence of 0.99.,0.99,message_0098;message_0068;message_0097
-msg_028,mute,promotion,High probability of scam or malicious intent.,1.0,message_0034;message_0112;message_0111
+msg_028,mute,scam,High probability of scam or malicious intent.,1.0,message_0034;message_0112;message_0111
 msg_012,mute,personal,Action selected: mute. Winning score (0.91) significantly dominated runner-up score (0.10) with a confidence of 0.99.,0.9914,message_0247;message_0194;message_0178
-msg_064,mute,payment,High probability of scam or malicious intent.,1.0,message_0202;message_0184;message_0088
+msg_064,mute,scam,High probability of scam or malicious intent.,1.0,message_0202;message_0184;message_0088
 msg_103,notify,personal,Action selected: notify. Winning score (0.46) comfortably exceeded runner-up score (0.35) with a confidence of 0.62.,0.624,message_0382;message_0231;message_0065
 msg_031,notify,event,Action selected: notify. Winning score (0.94) significantly dominated runner-up score (0.33) with a confidence of 0.97.,0.9705,message_0249;message_0117;message_0227
 msg_057,digest,personal,Action selected: digest. Winning score (0.68) comfortably exceeded runner-up score (0.55) with a confidence of 0.69.,0.6868,message_0059;message_0169;message_0003
-msg_087,mute,promotion,High probability of scam or malicious intent.,1.0,message_0164;message_0203;message_0391
+msg_087,mute,scam,High probability of scam or malicious intent.,1.0,message_0164;message_0203;message_0391
 msg_067,notify,payment,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.28) with a confidence of 0.99.,0.991,message_0098;message_0068;message_0097
 msg_039,notify,payment,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.32) with a confidence of 0.98.,0.9804,message_0255;message_0209;message_0133
 msg_082,notify,payment,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.30) with a confidence of 0.98.,0.9825,message_0218;message_0397;message_0380
-msg_066,mute,promotion,High probability of scam or malicious intent.,1.0,message_0188;message_0187;message_0402
+msg_066,mute,scam,High probability of scam or malicious intent.,1.0,message_0188;message_0187;message_0402
 msg_049,notify,business_update,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.42) with a confidence of 0.97.,0.9708,message_0154;message_0291;message_0153
-msg_015,mute,payment,High probability of scam or malicious intent.,1.0,message_0199;message_0085;message_0200
-msg_051,mute,promotion,High probability of scam or malicious intent.,1.0,message_0157;message_0158;message_0257
+msg_015,mute,scam,High probability of scam or malicious intent.,1.0,message_0199;message_0085;message_0200
+msg_051,mute,scam,High probability of scam or malicious intent.,1.0,message_0157;message_0158;message_0257
 msg_097,notify,personal,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.30) with a confidence of 0.98.,0.984,message_0359;message_0226;message_0054
 msg_089,notify,personal,Action selected: notify. Winning score (0.61) comfortably exceeded runner-up score (0.39) with a confidence of 0.80.,0.8038,none
 msg_053,mute,personal,Action selected: mute. Winning score (0.52) comfortably exceeded runner-up score (0.32) with a confidence of 0.74.,0.7409,message_0411;message_0253;message_0161
-msg_059,mute,payment,High probability of scam or malicious intent.,1.0,message_0053;message_0023;message_0045
-msg_024,mute,promotion,High probability of scam or malicious intent.,1.0,message_0157;message_0158;message_0257
-msg_072,mute,payment,High probability of scam or malicious intent.,1.0,message_0199;message_0085;message_0200
-msg_036,mute,payment,High probability of scam or malicious intent.,1.0,message_0283;message_0127;message_0128
-msg_076,mute,payment,High probability of scam or malicious intent.,1.0,message_0208;message_0207;message_0159
+msg_059,mute,scam,High probability of scam or malicious intent.,1.0,message_0053;message_0023;message_0045
+msg_024,mute,scam,High probability of scam or malicious intent.,1.0,message_0157;message_0158;message_0257
+msg_072,mute,scam,High probability of scam or malicious intent.,1.0,message_0199;message_0085;message_0200
+msg_036,mute,scam,High probability of scam or malicious intent.,1.0,message_0283;message_0127;message_0128
+msg_076,mute,scam,High probability of scam or malicious intent.,1.0,message_0208;message_0207;message_0159
 msg_055,notify,personal,Action selected: notify. Winning score (0.99) significantly dominated runner-up score (0.45) with a confidence of 0.97.,0.9728,message_0165;message_0166;message_0387
 msg_102,notify,personal,Action selected: notify. Winning score (0.48) comfortably exceeded runner-up score (0.18) with a confidence of 0.81.,0.8115,message_0371;message_0230;message_0060
 msg_080,notify,personal,Action selected: notify. Winning score (0.39) comfortably exceeded runner-up score (0.25) with a confidence of 0.61.,0.6086,message_0029;message_0044;message_0098
 msg_093,notify,business_update,Action selected: notify. Winning score (0.99) comfortably exceeded runner-up score (0.54) with a confidence of 0.94.,0.944,message_0347;message_0348;message_0349
-msg_034,mute,promotion,High probability of scam or malicious intent.,1.0,message_0167;message_0039;message_0241
+msg_034,mute,scam,High probability of scam or malicious intent.,1.0,message_0167;message_0039;message_0241
 msg_035,notify,payment,Action selected: notify. Winning score (0.61) comfortably exceeded runner-up score (0.41) with a confidence of 0.69.,0.693,message_0281;message_0125;message_0126
 msg_101,notify,personal,Action selected: notify. Winning score (0.39) comfortably exceeded runner-up score (0.24) with a confidence of 0.64.,0.6424,message_0370;message_0229;message_0268
 msg_041,notify,personal,Action selected: notify. Winning score (0.96) comfortably exceeded runner-up score (0.49) with a confidence of 0.95.,0.9469,message_0138;message_0137;message_0106
 msg_011,mute,personal,Action selected: mute. Winning score (0.95) significantly dominated runner-up score (0.21) with a confidence of 0.99.,0.9913,message_0241;message_0039;message_0078
 msg_110,mute,business_update,Action selected: mute. Winning score (0.75) comfortably exceeded runner-up score (0.39) with a confidence of 0.92.,0.915,message_0238;message_0381;message_0380
-msg_095,mute,payment,High probability of scam or malicious intent.,1.0,message_0201;message_0087;message_0183
-msg_074,mute,payment,High probability of scam or malicious intent.,1.0,message_0164;message_0358;message_0203
+msg_095,mute,scam,High probability of scam or malicious intent.,1.0,message_0201;message_0087;message_0183
+msg_074,mute,scam,High probability of scam or malicious intent.,1.0,message_0164;message_0358;message_0203
 msg_073,mute,personal,Action selected: mute. Winning score (0.87) significantly dominated runner-up score (0.28) with a confidence of 0.98.,0.979,message_0147;message_0201;message_0087
-msg_054,mute,payment,High probability of scam or malicious intent.,1.0,message_0163;message_0164;message_0204
+msg_054,mute,scam,High probability of scam or malicious intent.,1.0,message_0163;message_0164;message_0204
 msg_068,mute,personal,Action selected: mute. Winning score (0.49) comfortably exceeded runner-up score (0.32) with a confidence of 0.70.,0.7017,message_0191;message_0192;message_0289
 msg_100,notify,payment,Action selected: notify. Winning score (0.66) comfortably exceeded runner-up score (0.40) with a confidence of 0.80.,0.7956,message_0362;message_0117;message_0249
 msg_062,notify,personal,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.41) with a confidence of 0.97.,0.9719,message_0043;message_0029;message_0044
@@ -107,5 +107,5 @@ msg_043,notify,business_update,Action selected: notify. Winning score (1.00) sig
 msg_077,notify,business_update,Action selected: notify. Winning score (1.00) significantly dominated runner-up score (0.30) with a confidence of 0.98.,0.9823,message_0403;message_0037;message_0255
 msg_081,mute,business_update,Action selected: mute. Winning score (0.64) comfortably exceeded runner-up score (0.45) with a confidence of 0.72.,0.7194,message_0217;message_0167;message_0123
 msg_025,notify,personal,Action selected: notify. Winning score (0.79) comfortably exceeded runner-up score (0.31) with a confidence of 0.96.,0.9587,message_0239;message_0004;message_0105
-msg_084,mute,promotion,High probability of scam or malicious intent.,1.0,message_0220;message_0356;message_0048
-msg_022,mute,payment,High probability of scam or malicious intent.,1.0,message_0099;message_0100;message_0151
+msg_084,mute,scam,High probability of scam or malicious intent.,1.0,message_0220;message_0356;message_0048
+msg_022,mute,scam,High probability of scam or malicious intent.,1.0,message_0099;message_0100;message_0151

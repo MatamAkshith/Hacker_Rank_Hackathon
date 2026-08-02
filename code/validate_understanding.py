@@ -30,10 +30,14 @@ class TestUnderstandingFramework(unittest.TestCase):
         self.test_cache_dir = "test_cache"
         self.cache = MediaCache(base_dir=self.test_cache_dir)
         
-        # Temporarily disable GEMINI_API_KEY to force consistent placeholder fallback
+        # Temporarily disable GEMINI_API_KEY and prevent disk dotenv reloading
         self.api_key_backup = os.environ.get("GEMINI_API_KEY")
         if "GEMINI_API_KEY" in os.environ:
             del os.environ["GEMINI_API_KEY"]
+            
+        import code.ai.gemini_client
+        self.dotenv_backup = code.ai.gemini_client._ENV_LOADED
+        code.ai.gemini_client._ENV_LOADED = True
             
         self.engine = UnderstandingEngine(cache=self.cache)
         
@@ -60,6 +64,8 @@ class TestUnderstandingFramework(unittest.TestCase):
         if os.path.exists(self.test_cache_dir):
             shutil.rmtree(self.test_cache_dir)
             
+        import code.ai.gemini_client
+        code.ai.gemini_client._ENV_LOADED = self.dotenv_backup
         if self.api_key_backup is not None:
             os.environ["GEMINI_API_KEY"] = self.api_key_backup
 
