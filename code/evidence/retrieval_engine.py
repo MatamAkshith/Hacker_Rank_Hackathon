@@ -1,11 +1,13 @@
 from code.context.models import UnifiedContext
 from code.understanding.models import UnderstandingResult
 from code.assessment.models import MessageAssessment
-from code.evidence.models import EvidenceResult
+from code.evidence.models import EvidenceItem, EvidenceResult
 from code.evidence.retriever import CandidateRetriever
 from code.evidence.ranking import SimilarityRanker
 from code.evidence.selectors import EvidenceSelector
 from code.loader.data_loader import DataLoader
+
+from typing import List
 
 
 class RetrievalEngine:
@@ -27,12 +29,16 @@ class RetrievalEngine:
         assessment: MessageAssessment,
         understanding: UnderstandingResult,
     ) -> EvidenceResult:
-        """Retrieves and ranks historical evidence for the current message.
+        """Execute the full evidence retrieval pipeline for the current message.
 
-        Sprint 6.3: CandidateRetriever gathers the raw pool; SimilarityRanker
-        scores and sorts candidates.  EvidenceSelector (Sprint 6.4) is not yet
-        invoked — a safe default empty top_evidence is returned with a summary
-        that surfaces the ranked pool size and top score.
+        Pipeline:
+          1. CandidateRetriever  → broad structural pool
+          2. SimilarityRanker    → multi-signal scored & sorted pool
+          3. EvidenceSelector    → top-3 EvidenceItems with human-readable reasons
+
+        Graceful empty-state:
+          If the candidate pool is empty (new user, no history), returns a valid
+          EvidenceResult with retrieval_status="no_history".
 
         Args:
             context:       The unified context for the current incoming message.
@@ -40,31 +46,56 @@ class RetrievalEngine:
             understanding: The UnderstandingResult from the UnderstandingEngine.
 
         Returns:
-            EvidenceResult with retrieval_status="ranking_complete", an empty
-            top_evidence list, and a human-readable retrieval_summary.
+            EvidenceResult with retrieval_status="success" (or "no_history"),
+            top_evidence list of at most 3 EvidenceItems, and a human-readable
+            retrieval_summary.
         """
-        # Step 1: Retrieve broad candidate pool
+        # Step 1: Gather broad candidate pool
         candidates = self.retriever.fetch_candidates(context)
 
-        # Step 2: Rank candidates by multi-signal similarity
+        # Graceful no-history path
+        if not candidates:
+            return EvidenceResult(
+                top_evidence=[],
+                retrieval_summary="No historical messages found for this user.",
+                retrieval_status="no_history",
+            )
+
+        # Step 2: Score and rank by multi-signal similarity
         ranked = self.ranker.rank_candidates(context, understanding, candidates)
 
-        # Summarise ranked pool for inspection (selection pending Sprint 6.4)
-        top_score  = ranked[0]["similarity_score"] if ranked else 0.0
-        strategies = sorted({
-            src
-            for c in ranked
-            for src in c.get("_retrieval_sources", [])
-        })
-        summary = (
-            f"Ranked {len(ranked)} candidate(s). "
-            f"Top similarity_score: {top_score:.3f}. "
-            f"Retrieval strategies used: {', '.join(strategies) if strategies else 'none'}. "
-            "Evidence selection pending (Sprint 6.4)."
-        )
+        # Step 3: Select top-3 and map to EvidenceItems
+        top_evidence: List[EvidenceItem] = self.selector.select_top(ranked, k=3)
+
+        # Build a human-readable summary
+        n = len(top_evidence)
+        if n == 0:
+            summary = (
+                f"Evaluated {len(ranked)} historical candidate(s); "
+                "none met the minimum relevance threshold."
+            )
+            status = "no_history"
+        else:
+            top_score = top_evidence[0].similarity_score
+            strategies = sorted({
+                src
+                for c in ranked[:n]
+                for src in c.get("_retrieval_sources", [])
+            })
+            strength = (
+                "strong" if top_score >= 0.60
+                else "moderate" if top_score >= 0.35
+                else "weak"
+            )
+            summary = (
+                f"Found {n} {strength} historical match{'es' if n > 1 else ''} "
+                f"(top score: {top_score:.3f}). "
+                f"Retrieval strategies: {', '.join(strategies)}."
+            )
+            status = "success"
 
         return EvidenceResult(
-            top_evidence=[],
+            top_evidence=top_evidence,
             retrieval_summary=summary,
-            retrieval_status="ranking_complete",
+            retrieval_status=status,
         )
