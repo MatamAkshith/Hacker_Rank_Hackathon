@@ -354,14 +354,14 @@ class TestDecisionEngineShortCircuit(unittest.TestCase):
         self.assertAlmostEqual(result.confidence, 1.0)
 
     def test_safe_message_falls_through_to_scaffold_default(self):
-        """Safe message → hard rules return None → engine returns 'unassigned' placeholder."""
+        """Safe message → hard rules return None → engine returns a valid terminal action."""
         assessment = _safe_assessment()
         result = self.engine.decide(
             self.features, self.understanding, assessment, self.evidence
         )
         self.assertIsInstance(result, DecisionResult)
-        self.assertEqual(result.action, "unassigned",
-                         "Non-hard-rule messages should fall through to the scoring placeholder")
+        self.assertIn(result.action, ("notify", "digest", "mute"),
+                      "Non-hard-rule messages must result in a valid routing decision action")
 
 
 if __name__ == "__main__":

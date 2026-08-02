@@ -71,11 +71,5 @@ class DecisionEngine:
             base_scores, evidence, decision_trace=trace
         )
 
-        # Step 4: Action Selection (placeholder — Sprint 7.5)
-        # Returns unassigned action carrying the populated scoring audit trace
-        return DecisionResult(
-            action="unassigned",
-            reason="Probabilistic scoring complete, selection pending.",
-            confidence=0.5,
-            decision_trace=trace
-        )
+        # Step 4: Action Selection (Sprint 7.5)
+        return self.selector.select_action(adjusted_scores, trace)
