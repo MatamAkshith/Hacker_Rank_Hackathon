@@ -1,14 +1,23 @@
+import os
 from typing import Optional, Any
 from code.context.models import UnifiedContext
 from code.understanding.models import UnderstandingResult
 from code.understanding.processors.base import BaseProcessor
 from code.understanding.cache import MediaCache
+from code.ai.gemini_client import GeminiClient
 
 class ImageProcessor(BaseProcessor):
-    """Processor to analyze image attachments (OCR and visual description)."""
+    """Processor to analyze image attachments (OCR and visual description) using GeminiClient."""
     
-    def __init__(self, cache: Optional[MediaCache] = None):
+    def __init__(self, cache: Optional[MediaCache] = None, gemini_client: Optional[GeminiClient] = None):
         self.cache = cache or MediaCache()
+        self.gemini_client = gemini_client
+        if self.gemini_client is None:
+            try:
+                self.gemini_client = GeminiClient()
+            except ValueError:
+                # Graceful fallback: keep client as None if GEMINI_API_KEY is not configured
+                self.gemini_client = None
         
     def process(self, context: UnifiedContext) -> Optional[UnderstandingResult]:
         """Extracts semantic understanding from image context with caching."""
@@ -28,11 +37,43 @@ class ImageProcessor(BaseProcessor):
         if cached:
             return cached
             
-        # 2. Cache miss: compute and save
-        result = self._process_placeholder(image_path)
+        # 2. Cache miss: route to Gemini Vision or placeholder fallback
+        if self.gemini_client is not None:
+            try:
+                result = self._process_via_gemini_vision(image_path)
+            except Exception:
+                result = self._process_placeholder(image_path)
+        else:
+            result = self._process_placeholder(image_path)
+            
         self.cache.set("image", media_id, result)
         return result
         
+    def _process_via_gemini_vision(self, image_path: str) -> UnderstandingResult:
+        """Sends image and system instructions to Gemini LLM for structured visual semantic extraction."""
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        prompt_path = os.path.abspath(os.path.join(current_dir, "..", "ai", "prompts", "image.md"))
+        
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                system_instruction = f.read()
+        except Exception:
+            system_instruction = "Act as a WhatsApp image semantic analyzer. Return valid JSON matching the UnderstandingResult schema."
+            
+        user_prompt = "Perform OCR on the attached image and output the structured semantic details."
+        
+        # Invoke multimodal generate
+        result = self.gemini_client.generate(
+            system_instruction=system_instruction,
+            prompt=user_prompt,
+            response_model=UnderstandingResult,
+            media_path=image_path
+        )
+        
+        # Enforce strict processing status
+        result.processing_status = "processed_via_gemini_vision"
+        return result
+
     def _process_placeholder(self, image_path: str) -> UnderstandingResult:
         """Returns placeholder semantic representation for visual media."""
         return UnderstandingResult(
@@ -48,10 +89,3 @@ class ImageProcessor(BaseProcessor):
             contains_media=True,
             processing_status="placeholder_applied"
         )
-        
-    def _process_via_gemini_vision(self, image_path: str) -> Optional[UnderstandingResult]:
-        """Placeholder stub for future Gemini Vision API call.
-        
-        Will invoke multimodal model to perform OCR and visual analysis.
-        """
-        raise NotImplementedError("Gemini Vision API integration is planned for a future sprint.")
