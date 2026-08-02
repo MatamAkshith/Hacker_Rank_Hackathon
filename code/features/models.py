@@ -2,60 +2,60 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
-class SenderTrustFeature(BaseModel):
+class BaseFeature(BaseModel):
+    """Base model for all features to enforce consistent programmatic analysis and explainability."""
     score: float = Field(..., ge=0.0, le=1.0)
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    input_values: Dict[str, Any]
+    reason: str
+    calculation_trace: str
+
+class SenderTrustFeature(BaseFeature):
     messages_read: int
     replies_sent: int
     is_group: bool
 
-class BusinessTrustFeature(BaseModel):
-    score: float = Field(..., ge=0.0, le=1.0)
+class BusinessTrustFeature(BaseFeature):
     verified: bool
     domain_match: bool
     account_age_days: int
     user_reports_30d: int
 
-class RelationshipStrengthFeature(BaseModel):
-    score: float = Field(..., ge=0.0, le=1.0)
+class RelationshipStrengthFeature(BaseFeature):
     opened_count: int
     replied_count: int
     is_admin: bool
 
-class UrgencyFeature(BaseModel):
+class UrgencyFeature(BaseFeature):
     is_urgent: bool
     matched_keywords: List[str]
 
-class PromotionFeature(BaseModel):
-    score: float = Field(..., ge=0.0, le=1.0)
+class PromotionFeature(BaseFeature):
     matched_promo_keywords: List[str]
     is_retail_category: bool
 
-class SpamRiskFeature(BaseModel):
-    score: float = Field(..., ge=0.0, le=1.0)
+class SpamRiskFeature(BaseFeature):
     user_reported_30d: int
     forwarded_count: int
 
-class ScamRiskFeature(BaseModel):
-    score: float = Field(..., ge=0.0, le=1.0)
+class ScamRiskFeature(BaseFeature):
     matched_scam_keywords: List[str]
     verified_business: bool
 
-class ForwardRiskFeature(BaseModel):
+class ForwardRiskFeature(BaseFeature):
     is_high_risk: bool
     forwarded_count: int
 
-class HistoricalEngagementFeature(BaseModel):
-    score: float = Field(..., ge=0.0, le=1.0)
+class HistoricalEngagementFeature(BaseFeature):
     opened_30d: int
     dismissed_30d: int
     replied_30d: int
 
-class NotificationFatigueFeature(BaseModel):
-    score: float = Field(..., ge=0.0, le=1.0)
+class NotificationFatigueFeature(BaseFeature):
     sent_last_3d: int
     dismissed_last_3d: int
 
-class QuietHoursFeature(BaseModel):
+class QuietHoursFeature(BaseFeature):
     is_quiet_hours: bool
     message_time: str
     dnd_window: Optional[str] = None
