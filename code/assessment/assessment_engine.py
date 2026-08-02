@@ -38,12 +38,29 @@ class AssessmentEngine:
         # Calculators accepting features and understanding
         urgency = self.urgency_calculator.calculate(features, understanding)
         importance = self.importance_calculator.calculate(features, understanding)
-        personalization = self.personalization_calculator.calculate(context, understanding)
-        attention = self.attention_calculator.calculate(context, understanding)
+        personalization = self.personalization_calculator.calculate(features, understanding)
+        attention = self.attention_calculator.calculate(
+            features, understanding, urgency, importance, risk
+        )
         
-        # Aggregate overall score (higher is safer/better)
-        overall_score = trust.trust_score - risk.risk_score
+        # Calculate overall confidence based on data completeness and processing status
+        has_history = False
+        if features.trust and features.trust.sender_trust:
+            has_history = features.trust.sender_trust.score > 0.0 or features.trust.sender_trust.messages_read > 0
+            
+        status = getattr(understanding, "processing_status", "") or ""
         
+        if status == "placeholder_applied":
+            overall_confidence = 0.75
+        elif not has_history:
+            overall_confidence = 0.60
+        else:
+            overall_confidence = 0.95
+            
+        # Aggregate overall score
+        overall_score = (trust.trust_score * 0.2) + (importance.importance_score * 0.3) + \
+                        (urgency.urgency_score * 0.2) + (personalization.personalization_score * 0.3) - risk.risk_score
+                        
         return MessageAssessment(
             trust=trust,
             risk=risk,
@@ -52,5 +69,6 @@ class AssessmentEngine:
             personalization=personalization,
             attention=attention,
             overall_score=overall_score,
-            status="evaluated"
+            overall_confidence=overall_confidence,
+            status="assessment_complete"
         )

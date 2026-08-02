@@ -32,13 +32,17 @@ class ImportanceAssessment(BaseModel):
 
 class PersonalizationAssessment(BaseModel):
     """Assessment of relevance and historical affinity to the specific user."""
+    personalization_score: float = Field(0.0, description="Evaluated personalization score, between 0.0 and 1.0")
     affinity_score: float = Field(0.0, description="Evaluated user affinity score, between 0.0 and 1.0")
     user_relevance: str = Field("general", description="Categorical relevance classification (e.g., highly_relevant, general, low_relevance)")
+    reasons: List[str] = Field(default_factory=list, description="Reasoning behind personalization score")
 
 class AttentionAssessment(BaseModel):
     """Assessment of attention required and interruption costs."""
+    attention_score: float = Field(0.0, description="Evaluated overall attention priority score, between 0.0 and 1.0")
     attention_needed: bool = Field(False, description="True if the message demands prompt attention or action")
     interruption_cost: float = Field(0.0, description="Calculated cost of interrupting the user right now, between 0.0 and 1.0")
+    reasons: List[str] = Field(default_factory=list, description="Reasoning behind attention score")
 
 class MessageAssessment(BaseModel):
     """Unified container for all component message sub-assessments."""
@@ -49,4 +53,5 @@ class MessageAssessment(BaseModel):
     personalization: PersonalizationAssessment = Field(default_factory=PersonalizationAssessment)
     attention: AttentionAssessment = Field(default_factory=AttentionAssessment)
     overall_score: float = Field(0.0, description="Aggregated overall routing scoring context value")
+    overall_confidence: float = Field(0.0, description="Confidence in the overall assessment, between 0.0 and 1.0")
     status: str = Field("unassessed", description="Assessment processing status")

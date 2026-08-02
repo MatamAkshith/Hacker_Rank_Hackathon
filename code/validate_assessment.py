@@ -78,7 +78,7 @@ class TestMessageAssessmentScaffold(unittest.TestCase):
         
         # Assert base data contract types and status
         self.assertIsInstance(assessment, MessageAssessment)
-        self.assertEqual(assessment.status, "evaluated")
+        self.assertEqual(assessment.status, "assessment_complete")
         
         # Assert default values inside component sub-assessments
         self.assertEqual(assessment.trust.trust_score, 0.0)
@@ -93,13 +93,15 @@ class TestMessageAssessmentScaffold(unittest.TestCase):
         self.assertEqual(assessment.importance.importance_score, 0.25)
         self.assertEqual(assessment.importance.value_category, "neutral")
         
-        self.assertEqual(assessment.personalization.affinity_score, 0.0)
-        self.assertEqual(assessment.personalization.user_relevance, "general")
+        self.assertEqual(assessment.personalization.personalization_score, 0.8)
+        self.assertEqual(assessment.personalization.user_relevance, "highly_relevant")
         
         self.assertFalse(assessment.attention.attention_needed)
-        self.assertEqual(assessment.attention.interruption_cost, 0.0)
+        self.assertEqual(assessment.attention.attention_score, 0.175)
+        self.assertEqual(assessment.attention.interruption_cost, 0.2)
         
-        self.assertEqual(assessment.overall_score, 0.0)
+        self.assertAlmostEqual(assessment.overall_score, 0.335)
+        self.assertEqual(assessment.overall_confidence, 0.6)
 
 if __name__ == "__main__":
     unittest.main()
