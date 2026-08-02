@@ -9,3 +9,5 @@ env/
 .agents/
 .gemini/
 log.txt
+cache/
+output/

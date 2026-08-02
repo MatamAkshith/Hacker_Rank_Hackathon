@@ -57,6 +57,20 @@ class AssessmentEngine:
         else:
             overall_confidence = 0.95
             
+        # Ensure all sub-assessments have at least one explanation reason
+        if not trust.reasons:
+            trust.reasons.append("Trust score calculated based on sender profile and historical metadata.")
+        if not risk.reasons:
+            risk.reasons.append("Risk score evaluated based on standard safety profile checks.")
+        if not urgency.reasons:
+            urgency.reasons.append("Urgency score evaluated based on semantic content signals.")
+        if not importance.reasons:
+            importance.reasons.append("Importance score calculated based on message intent classification.")
+        if not personalization.reasons:
+            personalization.reasons.append("Personalization score evaluated based on sender relationship format.")
+        if not attention.reasons:
+            attention.reasons.append("Attention priority score synthesized from blended urgency and safety levels.")
+
         # Aggregate overall score
         overall_score = (trust.trust_score * 0.2) + (importance.importance_score * 0.3) + \
                         (urgency.urgency_score * 0.2) + (personalization.personalization_score * 0.3) - risk.risk_score
