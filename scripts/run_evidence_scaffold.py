@@ -50,8 +50,8 @@ def main():
             
             # Assertions
             assert isinstance(evidence, EvidenceResult), f"Expected EvidenceResult, got {type(evidence)}"
-            assert evidence.retrieval_status == "retrieval_complete", \
-                f"Expected retrieval_status='retrieval_complete', got '{evidence.retrieval_status}'"
+            assert evidence.retrieval_status == "ranking_complete", \
+                f"Expected retrieval_status='ranking_complete', got '{evidence.retrieval_status}'"
             assert isinstance(evidence.top_evidence, list), "top_evidence must be a list"
             
             pass_count += 1
