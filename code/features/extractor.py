@@ -49,65 +49,40 @@ from code.features.models import (
     QuietHoursFeature
 )
 
+# Centralized feature registry mapping (group_name, field_name) to method_name string
+FEATURE_REGISTRY = {}
+
+def register_feature(group: str, name: str):
+    """Decorator to register a feature extraction method under a group and attribute name."""
+    def decorator(func):
+        FEATURE_REGISTRY[(group, name)] = func.__name__
+        return func
+    return decorator
+
 class FeatureExtractor:
     """Extracts a structured FeatureVector from a UnifiedContext."""
     
     def extract(self, context: UnifiedContext) -> FeatureVector:
         """Extracts and evaluates trust, urgency, risk, and behavioral features from context."""
         
-        # 1. Quiet Hours (BehaviourFeatures)
-        quiet_hours_feat = self._extract_quiet_hours(context)
+        # Initialize dynamic storage for each subgroup
+        groups = {
+            "trust": {},
+            "urgency": {},
+            "risk": {},
+            "behaviour": {}
+        }
         
-        # 2. Business Trust (TrustFeatures)
-        business_trust_feat = self._extract_business_trust(context)
-        
-        # 3. Notification Fatigue (BehaviourFeatures)
-        fatigue_feat = self._extract_notification_fatigue(context)
-        
-        # 4. Historical Engagement (BehaviourFeatures)
-        engagement_feat = self._extract_historical_engagement(context)
-        
-        # 5. Relationship Strength (TrustFeatures)
-        rel_strength_feat = self._extract_relationship_strength(context)
-        
-        # 6. Forward Risk (RiskFeatures)
-        forward_risk_feat = self._extract_forward_risk(context)
-        
-        # 7. Sender Trust (TrustFeatures)
-        sender_trust_feat = self._extract_sender_trust(context)
-        
-        # 8. Urgency (UrgencyFeatures)
-        urgency_feat = self._extract_urgency(context)
-        
-        # 9. Promotion Score (UrgencyFeatures)
-        promotion_feat = self._extract_promotion(context)
-        
-        # 10. Spam Risk (RiskFeatures)
-        spam_risk_feat = self._extract_spam_risk(context)
-        
-        # 11. Scam Risk (RiskFeatures)
-        scam_risk_feat = self._extract_scam_risk(context)
-        
+        # Dynamically invoke all registered extractors
+        for (group_name, field_name), method_name in FEATURE_REGISTRY.items():
+            method = getattr(self, method_name)
+            groups[group_name][field_name] = method(context)
+            
         # Assemble nested structures
-        trust = TrustFeatures(
-            sender_trust=sender_trust_feat,
-            business_trust=business_trust_feat,
-            relationship_strength=rel_strength_feat
-        )
-        urgency = UrgencyFeatures(
-            urgency=urgency_feat,
-            promotion=promotion_feat
-        )
-        risk = RiskFeatures(
-            spam_risk=spam_risk_feat,
-            scam_risk=scam_risk_feat,
-            forward_risk=forward_risk_feat
-        )
-        behaviour = BehaviourFeatures(
-            historical_engagement=engagement_feat,
-            notification_fatigue=fatigue_feat,
-            quiet_hours=quiet_hours_feat
-        )
+        trust = TrustFeatures(**groups["trust"])
+        urgency = UrgencyFeatures(**groups["urgency"])
+        risk = RiskFeatures(**groups["risk"])
+        behaviour = BehaviourFeatures(**groups["behaviour"])
         
         return FeatureVector(
             trust=trust,
@@ -116,6 +91,7 @@ class FeatureExtractor:
             behaviour=behaviour
         )
 
+    @register_feature("behaviour", "quiet_hours")
     def _extract_quiet_hours(self, context: UnifiedContext) -> QuietHoursFeature:
         msg = context.conversation.message
         usr = context.recipient
@@ -187,6 +163,7 @@ class FeatureExtractor:
                 dnd_window=dnd
             )
 
+    @register_feature("trust", "business_trust")
     def _extract_business_trust(self, context: UnifiedContext) -> BusinessTrustFeature:
         biz = context.business.profile if context.business else None
         
@@ -262,6 +239,7 @@ class FeatureExtractor:
             user_reports_30d=user_reports_30d
         )
 
+    @register_feature("behaviour", "notification_fatigue")
     def _extract_notification_fatigue(self, context: UnifiedContext) -> NotificationFatigueFeature:
         summary = context.history.notification_summary if context.history else None
         
@@ -295,6 +273,7 @@ class FeatureExtractor:
             dismissed_last_3d=summary.dismissed_last_3d
         )
 
+    @register_feature("behaviour", "historical_engagement")
     def _extract_historical_engagement(self, context: UnifiedContext) -> HistoricalEngagementFeature:
         history = context.history.interaction_history if context.history else None
         
@@ -347,6 +326,7 @@ class FeatureExtractor:
             replied_30d=replied_30d
         )
 
+    @register_feature("trust", "relationship_strength")
     def _extract_relationship_strength(self, context: UnifiedContext) -> RelationshipStrengthFeature:
         sender_id = context.conversation.message.sender_user_id
         history = context.history.interaction_history if context.history else None
@@ -398,6 +378,7 @@ class FeatureExtractor:
             is_admin=is_admin
         )
 
+    @register_feature("risk", "forward_risk")
     def _extract_forward_risk(self, context: UnifiedContext) -> ForwardRiskFeature:
         count = context.conversation.message.forwarded_count if context.conversation.message.forwarded_count is not None else 0
         is_high_risk = count >= FORWARD_HIGH_RISK_THRESHOLD
@@ -422,6 +403,7 @@ class FeatureExtractor:
             forwarded_count=count
         )
 
+    @register_feature("trust", "sender_trust")
     def _extract_sender_trust(self, context: UnifiedContext) -> SenderTrustFeature:
         is_group = context.conversation.message.conversation_type == "group"
         sender = context.participants.sender if context.participants else None
@@ -476,6 +458,7 @@ class FeatureExtractor:
             is_group=is_group
         )
 
+    @register_feature("urgency", "urgency")
     def _extract_urgency(self, context: UnifiedContext) -> UrgencyFeature:
         text = (context.conversation.message.message_text or "").lower()
         urgency_keywords = ["urgent", "immediately", "asap", "due by", "expires", "deadline", "action required", "attention required", "important update"]
@@ -502,6 +485,7 @@ class FeatureExtractor:
             matched_keywords=matched
         )
 
+    @register_feature("urgency", "promotion")
     def _extract_promotion(self, context: UnifiedContext) -> PromotionFeature:
         text = (context.conversation.message.message_text or "").lower()
         promo_keywords = ["sale", "discount", "off", "coupon", "promo", "deal", "limited time", "buy now", "free shipping", "cashback", "offer", "save"]
@@ -540,6 +524,7 @@ class FeatureExtractor:
             is_retail_category=is_retail
         )
 
+    @register_feature("risk", "spam_risk")
     def _extract_spam_risk(self, context: UnifiedContext) -> SpamRiskFeature:
         user_reported = 0
         biz = context.business.profile if context.business else None
@@ -577,6 +562,7 @@ class FeatureExtractor:
             forwarded_count=forwarded_count
         )
 
+    @register_feature("risk", "scam_risk")
     def _extract_scam_risk(self, context: UnifiedContext) -> ScamRiskFeature:
         text = (context.conversation.message.message_text or "").lower()
         scam_keywords = ["otp", "login code", "verify pin", "pay reattempt fee", "release package", "scan qr", "bank account blocked", "urgent action required", "winner", "lottery", "claim reward", "transfer money"]
