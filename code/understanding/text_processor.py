@@ -61,7 +61,7 @@ class TextProcessor(BaseProcessor):
             )
             return cached
 
-        heuristic = self._process_via_heuristics(msg_text)
+        heuristic = self._process_via_heuristics(msg_text, context)
         confidence = self._estimate_heuristic_confidence(heuristic, msg_text)
 
         if confidence >= _HEURISTIC_CONFIDENCE_THRESHOLD:
@@ -213,7 +213,7 @@ class TextProcessor(BaseProcessor):
         result.processing_status = "processed_via_gemini_text"
         return result
 
-    def _process_via_heuristics(self, text: str) -> UnderstandingResult:
+    def _process_via_heuristics(self, text: str, context: Optional[UnifiedContext] = None) -> UnderstandingResult:
         """Heuristic analysis of raw text using regex and keyword matching."""
         text_lower = text.lower()
 
@@ -244,7 +244,40 @@ class TextProcessor(BaseProcessor):
         attention_kws = ["reply", "verify", "action required", "confirm", "respond", "immediately", "please click", "action needed"]
         requires_attention = any(kw in text_lower for kw in attention_kws) or urgency in ("high", "medium")
 
-        # 6. Intent and Message Type classification
+        # 6. Forward detection
+        forward_phrases = [
+            "forward this", "forward to everyone", "share this", "share with everyone",
+            "share to all", "circulate this", "pass this on", "send this to", "viral message"
+        ]
+        blessing_phrases = [
+            "blessing", "bless", "god", "lord", "jesus", "krishna", "allah", 
+            "chain message", "send to 10", "forward to 10", "amen", "will happen", 
+            "good luck", "pray"
+        ]
+        forwarded_cnt = 0
+        if context and context.conversation and context.conversation.message:
+            forwarded_cnt = context.conversation.message.forwarded_count or 0
+
+        has_forward_phrase = any(phrase in text_lower for phrase in forward_phrases)
+        has_blessing = any(phrase in text_lower for phrase in blessing_phrases)
+        forward_detected = (forwarded_cnt >= 3) or has_forward_phrase or has_blessing
+
+        # 7. Greeting detection
+        greeting_kws = [
+            "good morning", "good afternoon", "good evening", "good night", 
+            "happy birthday", "many happy returns", "congratulations", 
+            "best wishes", "happy anniversary", "welcome"
+        ]
+        greeting_detected = any(kw in text_lower for kw in greeting_kws)
+
+        # 8. Urgent classification flag
+        urgent_kws = [
+            "urgent", "asap", "immediately", "action required", "deadline", 
+            "today only", "respond now", "important notice", "critical", "act now"
+        ]
+        urgent_detected = any(kw in text_lower for kw in urgent_kws)
+
+        # 9. Intent and Message Type classification
         if promotion_detected:
             intent = "promotional"
             message_type = "promotional"
@@ -254,17 +287,26 @@ class TextProcessor(BaseProcessor):
         elif event_detected:
             intent = "scheduling"
             message_type = "personal"
+        elif urgent_detected:
+            intent = "social"
+            message_type = "urgent"
+        elif forward_detected:
+            intent = "social"
+            message_type = "forward"
+        elif greeting_detected:
+            intent = "social"
+            message_type = "greeting"
         else:
             intent = "social" if any(kw in text_lower for kw in ["hello", "hi", "hey", "how are", "bye"]) else "general"
             message_type = "personal"
 
-        # 7. Summary generation
+        # 10. Summary generation
         cleaned_text = text.strip().replace("\n", " ")
         summary = cleaned_text[:80] + "..." if len(cleaned_text) > 80 else cleaned_text
         if not summary:
             summary = "Empty message"
 
-        # 8. Entity extraction
+        # 11. Entity extraction
         raw_entities = re.findall(r'\b[A-Z][a-z]+\b', text)
         entities = list(dict.fromkeys(raw_entities))
 
